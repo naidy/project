@@ -11,10 +11,21 @@
         font-size: 30px;
         position: absolute;
     }
+    #info {
+        position: absolute;
+        top: 10px; width: 100%;
+        
+        padding: 5px;
+        text-align: center;
+        color: #ffff00;
+    }
 </style>
 </head>
 
 <body>
+
+<div id="info">Right click to control the camera<br/>
+Left click to search the nearest vertex</div>
 
 <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
 <script src="../js/OrbitControls.js"></script>
@@ -22,7 +33,7 @@
 <script>
 
 var camera, scene, renderer, control;
-var paper;
+var paper, vertex;
 var vertices = [];
 
 init();
@@ -49,7 +60,8 @@ function init() {
 	
 	//paper
 	var paperGeo = new THREE.PlaneGeometry (20, 20);
-    var paperMat = new THREE.MeshBasicMaterial ({color: 0xffffff});
+    var paperMat = new THREE.MeshBasicMaterial ({color: 0xffffff,
+        side: THREE.DoubleSide});
     paper = new THREE.Mesh (paperGeo, paperMat);
     scene.add (paper);
     vertices[0] = new THREE.Vector3 (10, 10, 0);
@@ -57,8 +69,21 @@ function init() {
     vertices[2] = new THREE.Vector3 (-10, -10, 0);
     vertices[3] = new THREE.Vector3 (-10, 10, 0);
 
+    //vertex
+    vertex = new THREE.Mesh (new THREE.CylinderGeometry(.5,.5,.1,32),
+        new THREE.MeshBasicMaterial({color:0xff0000}));
+    vertex.rotation.x = Math.PI/2;
+    scene.add (vertex);
+    vertex.visible = false;
+
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);
+}
+
+function lightVertex(pos)
+{
+    vertex.position.copy (pos);
+    vertex.visible = true;
 }
 
 function pickVertex(pos)
@@ -104,9 +129,7 @@ function onDocumentMouseDown(event)
     var distance = - camera.position.z / dir.z;
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
-
-
-    console.log (pos.x+" "+pos.y+" "+pos.z);
+    lightVertex(pickVertex(pos)); 
 }
 
 function update() 

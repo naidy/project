@@ -1,2 +1,197 @@
-<h1 align="center">TEST</h1>
-<a href="http://naidy.github.io/project/test/pickVertex_test.html">Pick Vertex</a>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+	body {
+		background-color: #fff;
+		color: #111;
+		margin: 0px;
+		overflow: hidden;
+		font-family: Monospace;
+		font-size: 30px;
+		position: absolute;
+	}
+</style>
+</head>
+
+<body>
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/origami.js"></script>
+<script src="js/state.js"></script>
+<script src="js/stage.js"></script>
+<script src="js/geometry.js"></script>
+<script src="js/fold.js"></script>
+<script src="js/facegroup.js"></script>
+<script src="js/face.js"></script>
+
+<script>
+
+var camera, scene, renderer, control;
+var paper, vertex;
+var vertices = [];
+var eyePosition = new THREE.Vector3();
+
+var Origami = new Origami();
+var State = new State();
+
+init();
+animate();
+
+function init() {
+	renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor (0x888888);
+
+    document.body.appendChild(renderer.domElement);
+	
+    scene = new THREE.Scene();
+
+	//camera
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+    camera.position.z = 50;
+    camera.lookAt (new THREE.Vector3 (0,0,0));
+    scene.add(camera);
+
+    //control
+    control = new THREE.OrbitControls(camera, renderer.domElement);
+	
+	//paper
+	var shape = new THREE.Shape();
+    shape.moveTo (10, 10, 0);
+    shape.lineTo (10, -10, 0);
+    shape.lineTo (-10, -10, 0);
+    shape.lineTo (-10, 10, 0);
+    shape.lineTo (10, 10, 0);
+
+    vertices[0] = new THREE.Vector3 (10, 10, 0);
+    vertices[1] = new THREE.Vector3 (10, -10, 0);
+    vertices[2] = new THREE.Vector3 (-10, -10, 0);
+    vertices[3] = new THREE.Vector3 (-10, 10, 0);
+
+    var paperGeo = new THREE.ShapeGeometry (shape);
+    var mFront = new THREE.MeshBasicMaterial ({color: 0x00ffff});
+    var mBack = new THREE.MeshBasicMaterial ({color: 0xff0000, side: THREE.BackSide});
+
+    paper = new THREE.Mesh (paperGeo, mFront);
+    scene.add (paper);
+
+    var paperBack = new THREE.Mesh (paperGeo, mBack);
+    paper.add (paperBack);
+
+    //vertex
+    vertex = new THREE.Mesh (new THREE.CylinderGeometry(.5,.5,.1,32),
+        new THREE.MeshBasicMaterial({color:0xffff00}));
+    vertex.rotation.x = Math.PI/2;
+    scene.add (vertex);
+    vertex.visible = false;
+
+    window.addEventListener('resize', onWindowResize, false);
+    document.addEventListener('mousedown', onDocumentMouseDown, false);
+    document.addEventListener('mouseup', onDocumentMouseUp, false);
+}
+
+function lightVertex(pos)
+{
+    vertex.position.copy (pos);
+    vertex.visible = true;
+}
+
+function pickVertex(pos)
+{
+    var i, minDis = 100000;
+    var dis, vertex;
+    for (i = 0; i < vertices.length; i++)
+    {
+        dis = pos.distanceTo(vertices[i]);
+        if (dis < minDis)
+        {
+            minDis = dis;
+            vertex = vertices[i];
+        }
+    }
+    if (minDis > 1)
+        return null;
+    return vertex;
+}
+
+function onDocumentMouseDown(event)
+{
+    if (event.button != 0)
+        return;
+
+    var vector = new THREE.Vector3();
+    vector.set(
+        ( event.clientX / window.innerWidth ) * 2 - 1,
+        - ( event.clientY / window.innerHeight ) * 2 + 1,
+        0.5 );
+    vector.unproject( camera );
+    var dir = vector.sub( camera.position ).normalize();
+    var distance = - camera.position.z / dir.z;
+    var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
+
+    if (pickVertex(pos) != null){
+        lightVertex(pickVertex(pos));
+        State.inFolding = true;
+    }
+    else{
+        vertex.visible = false;
+        Origami.releaseVertex();
+        State.inFolding = false;
+    }
+}
+
+function onDocumentMouseUp(event){
+    if (event.button == 0){
+        vertex.visible = false;
+        Origami.releaseVertex();
+        State.inFolding = false;
+    }
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+	
+    render();
+	update();
+    if (State.inFolding)
+        console.log ("fold");
+}
+
+function update() 
+{
+	control.update();
+    timer();
+
+    eyePosition.copy(camera.position);
+}
+
+function render() 
+{
+	renderer.render(scene, camera);
+}
+
+function timer(){
+    if (State.inFolding){
+        var inBending = false;
+        var destination;    //Vector
+        var eyePosition;    //...
+        Origami.moveVertex(destination, eyePosition, inBending);
+    }
+    else if (State.inAnimation){
+        if (Origami.play(State.fps))
+            State.inAnimation = false;
+    }
+}
+
+</script>
+
+</body>
+</html>

@@ -99,6 +99,8 @@ function pickVertex(pos)
             vertex = vertices[i];
         }
     }
+    if (minDis > 1)
+        return null;
     return vertex;
 }
 
@@ -118,7 +120,10 @@ function animate() {
 function onDocumentMouseDown(event)
 {
     if (event.button != 0)
+    {
+        vertex.visible = false;
         return;
+    }
     var vector = new THREE.Vector3();
     vector.set(
         ( event.clientX / window.innerWidth ) * 2 - 1,
@@ -129,7 +134,10 @@ function onDocumentMouseDown(event)
     var distance = - camera.position.z / dir.z;
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
-    lightVertex(pickVertex(pos)); 
+    if (pickVertex(pos) != null)
+        lightVertex(pickVertex(pos));
+    else
+        vertex.visible = false;
 }
 
 function update() 

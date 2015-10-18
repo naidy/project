@@ -40,7 +40,7 @@ var Line = function(){
 	this.passage = new THREE.Vector3();
 }
 
-Line.prototype.set = function(a, b){
+Line.prototype.set = function(a, b){   // vector vector
 	this.direction.subVectors(b, a);
 	this.passage.copy (a);
 }
@@ -95,27 +95,4 @@ Line.prototype.intersection = function(a, b){
 		this.passage.setX ((ai * b.normal.y - bi * a.normal.y) / d);
 		this.passage.setY (-(ai * b.normal.x - bi * a.normal.x) / d);
 	}
-}
-
-//function
-function LinePlaneIntersection (vector, line, plane){
-	var pp = new THREE.Vector3(); pp.copy(plane.passage);
-	var lp = new THREE.Vector3(); lp.copy(line.passage);
-	var pn = new THREE.Vector3(); pn.copy(plane.normal);
-
-	var t = (pp.sub(lp)).dot(pn);
-	t /= pn.dot(line.direction);
-	vector.copy (line.direction);
-	vector.multiplyScalar(t);
-	vector.add(line.passage);
-}
-
-function VectorVectorDistance (v1, v2){
-	return Math.sqrt((v1.x-v2.x)*(v1.x-v2.x) + (v1.y-v2.y)*(v1.y-v2.y) + (v1.z-v2.z)*(v1.z-v2.z));
-}
-
-function VectorVectorVectorExterior (v, v1, v2){
-	v.setX(v1.y*v2.z-v2.y*v1.z);
-	v.setY(v1.z*v2.x-v2.z*v1.x);
-	v.setZ(v1.x*v2.y-v2.x*v1.y);
 }

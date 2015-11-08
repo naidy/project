@@ -18,7 +18,7 @@ var Face = function(){
 	this.birthStage = 0;
 	this.faceGroupID = 0;
 	this.edge = null;
-	this.vertexSize = 4;
+	this.vertexSize;
 	this.label;
 	this.newEdge = null;
 	this.parent = null;
@@ -27,17 +27,32 @@ var Face = function(){
 	this.children[1] = null;
 }
 
-Face.prototype.set = function(){
+Face.prototype.vertex = function (i){  //int
+	return this.edge[i].primaryVertex(this);
+}
+
+Face.prototype.normal = function(){
+	var n = new Vector();
+	n.normal(this.vertex(2).position, this.vertex(1).position, this.vertex(0).position);
+	return n;
+}
+
+Face.prototype.connectFace = function (i){  //int
+	return this.edge[i].connectFace(this);
+}
+
+Face.prototype.setOriginal = function(){
+	this.vertexSize = 4;
 	var position = [];
 	var i;
 	for (i = 0; i < this.vertexSize; i++)
-		position[i] = new THREE.Vector3();
+		position[i] = new Vector();
 	position[0].set (10, 10, 0);
 	position[1].set (-10, 10, 0);
 	position[2].set (-10, -10, 0);
 	position[3].set (10, -10, 0);
 
-	var texcoord = [];
+	/*var texcoord = [];
 	var xmin, xmax, ymin, ymax;
 	xmin = xmax = position[0].x;
 	ymin = ymax = position[0].y;
@@ -56,31 +71,64 @@ Face.prototype.set = function(){
 	for (i = 0; i < this.vertexSize; i++){
 		texcoord[i].x = (position[i].x - xmin)/(xmax - xmin);
 		texcoord[i].y = (position[i].y - ymin)/(ymax - ymin);
-	}
+	}*/
 
 	this.edge = [];
 	for (i = 0; i < this.vertexSize; i++){
 		this.edge[i] = new Edge();
 		this.edge[i].face[0] = this;
 		this.edge[i].vertex[0] = new Vertex();
-		this.edge[i].vertex[0].set (position[i], texcoord[i]);
+		this.edge[i].vertex[0].set (position[i]);
 	}
 	for (i = 0; i < this.vertexSize; i++)
 		this.edge[i].vertex[1] = this.edge[(i+1)%this.vertexSize].vertex[0];
 }
 
-Face.prototype.set2 = function (parentFace, birthStage){  //face int
-	this.birthStage = birthStage;
-	this.edge = [];
-	this.vertexSize = 0;
-	this.faceGroupID = parentFace.faceGroupID;
-	this.newEdge = null;
-	this.parent = parentFace;
+Face.prototype.closestVertex = function (line, dv){  //line dv
+	var i;
+	for (i = 0; i < this.vertexSize; i++){
+		var d = line.distance (this.vertex(i).position);
+		if (d < dv.distance){
+			dv.vertex = this.vertex(i);
+			dv.distance = d;
+		}
+	}
 }
 
-Face.prototype.closetEdge = function (distance, p0, p1){  //double vector vector
+Face.prototype.labelPickedCandidate = function (position){  //vector
+	var i;
+	for (i = 0; i < this.vertexSize; i++)
+		this.vertex(i).labelPickedCandidate (position);
+}
+
+Face.prototype.closestVertex2 = function (position, dv){  //vector dv
+	var i;
+	for (i = 0; i < this.vertexSize; i++){
+		var d = position.distance(this.vertex(i).position);
+		if (d < dv.distance){
+			dv.vertex = this.vertex(i);
+			dv.distance = d;
+			//console.log ('check face');
+		}
+	}
+}
+
+Face.prototype.closestVertex3 = function (line, dv, except, apartMargin){  //line dv vector double
+	if (apartMargin == undefined)
+		apartMargin = 1.0;
+	var i;
+	for (i = 0; i < this.vertexSize; i++){
+		var d = line.distance (this.vertex(i).position);
+		if (d < dv.distance && this.vertex(i).position.distanceTo(except) > apartMargin){
+			dv.vertex = this.vertex(i);
+			dv.distance = d;
+		}
+	}
+}
+
+Face.prototype.closestEdge = function (distance, p0, p1){  //double vector vector
 	var closest = null;  //edge
-	distance = 1.79769e+308;  //DBL_MAX
+	distance = DBL_MAX;  //DBL_MAX
 	var i;
 	for (i = 0; i < this.vertexSize; i++){
 		var d = this.edge[i].distance(p0, p1);
@@ -90,10 +138,6 @@ Face.prototype.closetEdge = function (distance, p0, p1){  //double vector vector
 		}
 	}
 	return closest;
-}
-
-Face.prototype.vertex = function (i){  //int
-	return this.edge[i].primaryVertex(this);
 }
 
 Face.prototype.labelVertices = function (fold){  //fold
@@ -127,44 +171,35 @@ Face.prototype.clearEdgeAndFaceLabels = function (){
 		this.edge[i].label = UndoneEdge;
 }
 
-Face.prototype.neighborEdge = function (vertex, select){  //vertex int
-	var i;
-	for (i = 0; i < this.vertexSize; i++){
-		if (this.vertex(i) == vertex)
-			return this.edge[(i-1+this.vertexSize+select)%this.vertexSize];
-	}
-	return null;
-}
-
-Face.prototype.include = function (vertex){  //vertex
-	var i;
-	for (i = 0; i < this.vertexSize; i++){
-		if (this.vertex(i) == vertex)
-			return 1;
-	}
-	return 0;
+Face.prototype.set2 = function (parentFace, birthStage){  //face int
+	this.birthStage = birthStage;
+	this.edge = [];
+	this.vertexSize = 0;
+	this.faceGroupID = parentFace.faceGroupID;
+	this.newEdge = null;
+	this.parent = parentFace;
 }
 
 Face.prototype.setBoundary = function (boundary){  //plane
-	var faceNormal = new THREE.Vector3();
-	VectorNormal (faceNormal, this.vertex(0).position, this.vertex(1).position, this.vertex(2).position);
+	var faceNormal = new Vector();
+	faceNormal.normal(this.vertex(0).position, this.vertex(1).position, this.vertex(2).position);
 	var i;
 	for (i = 0; i < this.vertexSize; i++){
-		var edge = new THREE.Vector3();
-		edge.subVectors (this.vertex((i+1)%this.vertexSize).position, this.vertex(1).position);
-		VectorVectorVectorExterior(boundary[i].normal, faceNormal, edge);
+		var edge = new Vector();
+		edge.sub2 (this.vertex((i+1)%this.vertexSize).position, this.vertex(1).position);
+		boundary[i].normal.exterior(faceNormal, edge);
 		boundary[i].normal.normalize();
-		boundary[i].passage.copy (this.vertex((i+1)%this.vertexSize).position);
+		boundary[i].passage.set2(this.vertex((i+1)%this.vertexSize).position);
 	}
 }
 
 Face.prototype.ifIncluded = function (boundary, boundarySize, margin){  //plane int double
 	margin = 0.1;
-	var gravity = new THREE.Vector3();
+	var gravity = new Vector();
 	var i;
 	for (i = 0; i < this.vertexSize; i++)
 		gravity.add (this.vertex(i).position);
-	gravity.divideScalar(this.vertexSize);
+	gravity.mul(1/this.vertexSize);
 	for (i = 0; i < boundarySize; i++){
 		if (boundary[i].signedDistance(gravity) <= margin)
 			return 0;
@@ -214,6 +249,181 @@ Face.prototype.overlap = function (face, margin){  //face double
 			if (intersect)
 				return 1;
 		}
+	}
+	return 0;
+}
+
+Face.prototype.renew = function (birthStage, faceGroupID, fold){  //int int fold
+	if (this.label != UndoneFace)
+		return RenewDone;
+	if (faceGroupID != this.faceGroupID)
+		return RenewFailure;
+	var i;
+	for (i = 0; i < this.vertexSize; i++)
+		this.vertex(i).renew(birthStage, fold);
+	for (i = 0; i < this.vertexSize; i++)
+		this.edge[i].renew(birthStage, fold);
+	var m = 0, f = 0;
+	for (i = 0; i < this.vertexSize; i++){
+		if (this.vertex(i).label == Moved)
+			m++;
+		else if (this.vertex(i).label == Fixed)
+			f++;
+	}
+	if (f == 0)
+		this.label = MovedFace;
+	else if (m == 0)
+		this.label = FixedFace;
+	else{
+		this.label = DividedFace;
+		this.children[0] = new Face();
+		this.children[0].set2 (this, birthStage);
+		this.children[1] = new Face();
+		this.children[1].set2 (this, birthStage);
+		this.newEdge = new Edge();
+		this.newEdge.set1 (this.children[0], this.children[1], birthStage);
+		for (i = 0; i < this.vertexSize; i++){
+			switch (this.edge[i].label){
+				case MovedEdge:
+					this.children[0].edge[children[0].vertexSize++] = this.edge[i];
+					if (this.edge[(i+1)%this.vertexSize].label == FixedEdge){
+						this.newEdge.vertex[0] = this.vertex((i+1)%this.vertexSize);
+						this.children[0].edge[children[0].vertexSize++] = this.newEdge;
+					}
+					break;
+				case FixedEdge:
+					this.children[1].edge[children[1].vertexSize++] = this.edge[i];
+					if (this.edge[(i+1)%this.vertexSize].label == MovedEdge){
+						this.newEdge.vertex[1] = this.vertex((i+1)%this.vertexSize);
+						this.children[1].edge[children[1].vertexSize++] = this.newEdge;
+					}
+					break;
+				case DividedEdge:
+					this.children[0].edge[children[0].vertexSize++] = edge[i].children[0].label == MovedEdge ? this.edge[i].children[0] : this.edge[i].children[1];
+					this.children[1].edge[children[1].vertexSize++] = edge[i].children[0].label == FixedEdge ? this.edge[i].children[0] : this.edge[i].children[1];
+					if (this.vertex(i).label == Moved){
+						this.newEdge.vertex[0] = this.edge[i].newVertex;
+						this.children[0].edge[children[0].vertexSize++] = this.newEdge;
+					}else{
+						this.newEdge.vertex[1] = this.edge[i].newVertex;
+						this.children[1].edge[children[1].vertexSize++] = this.newEdge;
+					}
+					break;
+			}
+		}
+	}
+	for (i = 0; i < this.vertexSize; i++){
+		if (this.edge[i].label == MovedEdge || this.edge[i].label == DividedEdge){
+			if (this.connectFace(i) != null){
+				if (this.connectFace(i).renew(birthStage, faceGroupID, fold) == RenewFailure)
+					return RenewFailure;
+			}
+		}
+	}
+	return RenewSuccess;
+}
+
+Face.prototype.renewPointer = function (faceGroupID){  //int
+	this.faceGroupID = faceGroupID;
+	var i;
+	for (i = 0; i < this.vertexSize; i++)
+		this.edge[i].renewPointer();
+}
+
+Face.prototype.resetPointer = function (deleteStage){  //int
+	var i;
+	for (i = 0; i < this.vertexSize; i++)
+		this.edge[i].resetPointer(deleteStage);
+}
+
+Face.prototype.reset = function (deleteStage, faceGroupID){  //int int
+	this.faceGroupID = faceGroupID;
+	var i;
+	for (i = 0; i < this.vertexSize; i++)
+		this.edge[i].reset(deleteStage);
+	if (this.children[0] != null){
+		delete this.children[0];
+		this.children[0] = null;
+	}
+	if (this.children[1] != null){
+		delete this.children[1];
+		this.children[1] = null;
+	}
+	if (this.newEdge != null){
+		delete this.newEdge;
+		this.newEdge = null;
+	}
+}
+
+Face.prototype.whichSide = function (plane, margin){  //plane double
+	if (margin == undefined)
+		margin = 0.01;
+	var before = 0, behind = 0, onIntersection = 0;
+	var i;
+	for (i = 0; i < this.vertexSize; i++){
+		var d = plane.signedDistance(this.vertex(i).position);
+		if (d > margin)
+			before = 1;
+		else if (d < -margin)
+			behind = 1;
+		else
+			onIntersection = 1;
+	}
+	if (before == 1 && behind == 0)
+		return onIntersection ? InfrontContact : InfrontApart;
+	else if (before == 0 && behind == 1)
+		return onIntersection ? BehindContact : BehindApart;
+	else
+		return Across;
+}
+
+Face.prototype.draw = function (faceNumber){  //int
+	var color;
+	if (faceNumber == 0)
+		color = new THREE.Color (0x00ffff);
+	else if (faceNumber == 1)
+		color = new THREE.Color (0xff0000);
+
+	/////////////////////////////////
+
+	var shape = new THREE.Shape();
+    var i;
+    for (i = 0; i < this.vertexSize; i++){
+    	if (i < 1)
+    		shape.moveTo (this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z);
+    	else
+    		shape.lineTo (this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z);
+    }
+    shape.lineTo (this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z);
+    
+    var paperGeo = new THREE.ShapeGeometry (shape);
+    var mFront = new THREE.MeshBasicMaterial ({color: 0x00ffff, side: THREE.DoubleSide});
+    //var mBack = new THREE.MeshBasicMaterial ({color: 0xff0000, side: THREE.BackSide});
+
+    var paper = new THREE.Mesh (paperGeo, mFront);
+    scene.add (paper);
+
+    objects.push(paper);
+
+    /*var paperBack = new THREE.Mesh (paperGeo, mBack);
+    paper.add (paperBack);*/
+}
+
+//other
+Face.prototype.neighborEdge = function (vertex, select){  //vertex int
+	var i;
+	for (i = 0; i < this.vertexSize; i++){
+		if (this.vertex(i) == vertex)
+			return this.edge[(i-1+this.vertexSize+select)%this.vertexSize];
+	}
+	return null;
+}
+
+Face.prototype.include = function (vertex){  //vertex
+	var i;
+	for (i = 0; i < this.vertexSize; i++){
+		if (this.vertex(i) == vertex)
+			return 1;
 	}
 	return 0;
 }

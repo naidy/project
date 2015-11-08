@@ -8,7 +8,7 @@ var Edge = function(){
 	this.birthStage = 0;
 	this.face = [];
 	this.vertex = [];
-	this.label;
+	this.label = FixedEdge;
 	this.newVertex = null;
 	this.parent = null;
 	this.children = [];
@@ -19,6 +19,18 @@ var Edge = function(){
 		this.vertex[i] = null;
 		this.children[i] = null;
 	}
+}
+
+Edge.prototype.primaryVertex = function (face){  //face
+	return face == this.face[0] || face.parent == this.face[0] || face.children[0] == this.face[0] || face.children[1] == this.face[0] ? this.vertex[0] : this.vertex[1];
+}
+
+Edge.prototype.distance = function(p0, p1){   //vector vector
+	var e = new Line();
+	e.set(this.vertex[0].position, this.vertex[1].position);
+	var d0 = e.distance(p0);
+	var d1 = e.distance(p1);
+	return d0 > d1 ? d0 : d1;
 }
 
 Edge.prototype.set1 = function(children0, children1, birthStage){  //face face int
@@ -33,14 +45,6 @@ Edge.prototype.set2 = function(parentEdge, birthStage){  //edge int
 	this.face[0] = parentEdge.face[0];
 	this.face[1] = parentEdge.face[1];
 	this.parent = parentEdge;
-}
-
-Edge.prototype.distance = function(p0, p1){   //vector vector
-	var e = new Line();
-	e.set(this.vertex[0].position, vertex[1].position);
-	var d0 = e.distance(p0);
-	var d1 = e.distance(p1);
-	return d0 > d1 ? d0 : d1;
 }
 
 Edge.prototype.connectFace = function(face){  //face
@@ -72,6 +76,30 @@ Edge.prototype.renew = function(birthStage, fold){  //int fold
 	}
 }
 
+Edge.prototype.renewPointer = function(){
+	var i;
+	for (i = 0; i < 2; i++){
+		if (this.vertex[i].child != null)
+			this.vertex[i] = this.vertex[i].child;
+		if (this.face[i] != null && this.face[i].children[0] != null){
+			if (this.label == MovedEdge)
+				this.face[i] = this.face[i].children[0];
+			else
+				this.face[i] = this.face[i].children[1];
+		}
+	}
+}
+
+Edge.prototype.resetPointer = function (deleteStage){  //int
+	var i;
+	for (i = 0; i < 2; i++){
+		if (this.vertex[i].birthStage == deleteStage)
+			this.vertex[i] = this.vertex[i].parent;
+		if (this.face[i] != null && this.face[i].birthStage == deleteStage)
+			this.face[i] = this.face[i].parent;
+	}
+}
+
 Edge.prototype.reset = function(deleteStage){  //int
 	if (this.vertex[0].child != null){
 		delete this.vertex[0].child;
@@ -93,8 +121,4 @@ Edge.prototype.reset = function(deleteStage){  //int
 		delete this.newVertex;
 		this.newVertex = null;
 	}
-}
-
-Edge.prototype.primaryVertex = function (face){  //face
-	return face == this.face[0] || face.parent == this.face[0] || face.children[0] == this.face[0] || face.children[1] == this.face[0] ? this.vertex[0] : this.vertex[1];
 }

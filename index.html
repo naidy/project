@@ -27,16 +27,27 @@
 <script src="js/face.js"></script>
 <script src="js/edge.js"></script>
 <script src="js/vector.js"></script>
+<script src="js/vertex.js"></script>
+<script src="js/KeyboardState.js"></script>
+<script src="js/return.js"></script>
+<script src="js/adjust.js"></script>
 
 <script>
 
 var camera, scene, renderer, control;
-var paper, vertex;
-var vertices = [];
-var eyePosition = new THREE.Vector3();
+var keyboard = new KeyboardState();
+var eyePosition = new Vector();
+var objects = [];
+var cnt = 0;
+var mouseDown = false;
 
 var Origami = new Origami();
 var State = new State();
+var Cursor3D = new cursor3D();
+
+//define
+var DBL_MAX = 10000000;
+var DBL_EPSILON = 2.2204460492503131e-16;
 
 init();
 animate();
@@ -59,68 +70,42 @@ function init() {
     //control
     control = new THREE.OrbitControls(camera, renderer.domElement);
 	
-	//paper
-	var shape = new THREE.Shape();
-    shape.moveTo (10, 10, 0);
-    shape.lineTo (10, -10, 0);
-    shape.lineTo (-10, -10, 0);
-    shape.lineTo (-10, 10, 0);
-    shape.lineTo (10, 10, 0);
-
-    vertices[0] = new THREE.Vector3 (10, 10, 0);
-    vertices[1] = new THREE.Vector3 (10, -10, 0);
-    vertices[2] = new THREE.Vector3 (-10, -10, 0);
-    vertices[3] = new THREE.Vector3 (-10, 10, 0);
-
-    var paperGeo = new THREE.ShapeGeometry (shape);
-    var mFront = new THREE.MeshBasicMaterial ({color: 0x00ffff});
-    var mBack = new THREE.MeshBasicMaterial ({color: 0xff0000, side: THREE.BackSide});
-
-    paper = new THREE.Mesh (paperGeo, mFront);
-    scene.add (paper);
-
-    var paperBack = new THREE.Mesh (paperGeo, mBack);
-    paper.add (paperBack);
-
-    //vertex
-    vertex = new THREE.Mesh (new THREE.CylinderGeometry(.5,.5,.1,32),
-        new THREE.MeshBasicMaterial({color:0xffff00}));
-    vertex.rotation.x = Math.PI/2;
-    scene.add (vertex);
-    vertex.visible = false;
-
+	Origami.setOriginal();
+    display();
+    
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);
     document.addEventListener('mouseup', onDocumentMouseUp, false);
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+}
+
+function display(){
+    eyePosition.set2 (camera.position.x, camera.position.y, camera.position.z);
+    Origami.draw (eyePosition);
+    Origami.drawAdjust();
+}
+
+function resetScene(){
+    var i;
+    for (i = 0; i < objects.length; i++){
+        scene.remove(objects[i]);
+        delete objects[i];
+    }
 }
 
 function lightVertex(pos)
 {
+    var vertex = new THREE.Mesh (new THREE.CylinderGeometry(.5,.5,.1,32),
+        new THREE.MeshBasicMaterial({color:0xffff00}));
+    vertex.rotation.x = Math.PI/2;
     vertex.position.copy (pos);
-    vertex.visible = true;
+
+    scene.add (vertex); 
+    objects.push(vertex);
 }
 
-function pickVertex(pos)
-{
-    var i, minDis = 100000;
-    var dis, vertex;
-    for (i = 0; i < vertices.length; i++)
-    {
-        dis = pos.distanceTo(vertices[i]);
-        if (dis < minDis)
-        {
-            minDis = dis;
-            vertex = vertices[i];
-        }
-    }
-    if (minDis > 1)
-        return null;
-    return vertex;
-}
-
-function onDocumentMouseDown(event)
-{
-    if (event.button != 0)
+function onMouseDown(event){
+    if (event.button != 0 || State.inAnimation || State.inRotation)
         return;
 
     var vector = new THREE.Vector3();
@@ -133,23 +118,35 @@ function onDocumentMouseDown(event)
     var distance = - camera.position.z / dir.z;
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
-    if (pickVertex(pos) != null){
-        lightVertex(pickVertex(pos));
+    Cursor3D.set (pos.x, pos.y, pos.z);
+    console.log (Cursor3D.x+" "+Cursor3D.y+" "+Cursor3D.z);
+
+    var p = new Vector(pos.x, pos.y, pos.z);
+    var v = new Vector(Cursor3D.x, Cursor3D.y, Cursor3D.z);
+    var picked = new Vector();
+    picked.set2(Origami.pickVertex(v));
+    console.log (picked);
+
+    if (picked.distance(p) <= 0.3)
         State.inFolding = true;
-    }
-    else{
-        vertex.visible = false;
-        Origami.releaseVertex();
-        State.inFolding = false;
-    }
+}
+
+function onDocumentMouseDown(event)
+{
+    mouseDown = true;
+    //onMouseDown(event);
 }
 
 function onDocumentMouseUp(event){
-    if (event.button == 0){
-        vertex.visible = false;
-        Origami.releaseVertex();
-        State.inFolding = false;
-    }
+    mouseDown = false;
+
+    Origami.releaseVertex();
+    State.inFolding = false;
+}
+
+function onDocumentMouseMove(event){
+    if (mouseDown)
+        onMouseDown(event);
 }
 
 function onWindowResize() {
@@ -161,18 +158,27 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
 	
-    render();
 	update();
-    if (State.inFolding)
-        console.log ("fold");
+    render();
 }
 
 function update() 
 {
 	control.update();
+    keyboard.update();
+    
     timer();
+    if (State.inFolding == true){
+        resetScene();
+        display();
+    }
 
-    eyePosition.copy(camera.position);
+    cnt = 0;
+    scene.traverse( function( child ) {
+    if( child instanceof THREE.Mesh )
+        cnt++;
+    } );
+    //console.log (cnt);
 }
 
 function render() 
@@ -183,9 +189,15 @@ function render()
 function timer(){
     if (State.inFolding){
         var inBending = false;
-        var destination;    //Vector
-        var eyePosition;    //...
-        Origami.moveVertex(destination, eyePosition, inBending);
+        if (keyboard.down("M")){
+            Cursor3D.z -= 0.015/60;
+            inBending = true;
+        }
+        else if (keyboard.down("N"))
+            Cursor3D.z += 0.015/60;
+        var destination = new Vector();
+        destination.set (Cursor3D.x, Cursor3D.y, Cursor3D.z);
+        Origami.moveVertex (destination, eyePosition, inBending);
     }
     else if (State.inAnimation){
         if (Origami.play(State.fps))

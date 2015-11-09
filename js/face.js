@@ -82,6 +82,7 @@ Face.prototype.setOriginal = function(){
 	}
 	for (i = 0; i < this.vertexSize; i++)
 		this.edge[i].vertex[1] = this.edge[(i+1)%this.vertexSize].vertex[0];
+	this.newEdge = this.parent = this.children[0] = this.children[1] = null;
 }
 
 Face.prototype.closestVertex = function (line, dv){  //line dv
@@ -119,7 +120,7 @@ Face.prototype.closestVertex3 = function (line, dv, except, apartMargin){  //lin
 	var i;
 	for (i = 0; i < this.vertexSize; i++){
 		var d = line.distance (this.vertex(i).position);
-		if (d < dv.distance && this.vertex(i).position.distanceTo(except) > apartMargin){
+		if (d < dv.distance && this.vertex(i).position.distance(except) > apartMargin){
 			dv.vertex = this.vertex(i);
 			dv.distance = d;
 		}
@@ -178,6 +179,7 @@ Face.prototype.set2 = function (parentFace, birthStage){  //face int
 	this.faceGroupID = parentFace.faceGroupID;
 	this.newEdge = null;
 	this.parent = parentFace;
+	this.children[0] = this.children[1] = null;
 }
 
 Face.prototype.setBoundary = function (boundary){  //plane
@@ -285,28 +287,28 @@ Face.prototype.renew = function (birthStage, faceGroupID, fold){  //int int fold
 		for (i = 0; i < this.vertexSize; i++){
 			switch (this.edge[i].label){
 				case MovedEdge:
-					this.children[0].edge[children[0].vertexSize++] = this.edge[i];
+					this.children[0].edge[this.children[0].vertexSize++] = this.edge[i];
 					if (this.edge[(i+1)%this.vertexSize].label == FixedEdge){
 						this.newEdge.vertex[0] = this.vertex((i+1)%this.vertexSize);
-						this.children[0].edge[children[0].vertexSize++] = this.newEdge;
+						this.children[0].edge[this.children[0].vertexSize++] = this.newEdge;
 					}
 					break;
 				case FixedEdge:
-					this.children[1].edge[children[1].vertexSize++] = this.edge[i];
+					this.children[1].edge[this.children[1].vertexSize++] = this.edge[i];
 					if (this.edge[(i+1)%this.vertexSize].label == MovedEdge){
 						this.newEdge.vertex[1] = this.vertex((i+1)%this.vertexSize);
-						this.children[1].edge[children[1].vertexSize++] = this.newEdge;
+						this.children[1].edge[this.children[1].vertexSize++] = this.newEdge;
 					}
 					break;
 				case DividedEdge:
-					this.children[0].edge[children[0].vertexSize++] = edge[i].children[0].label == MovedEdge ? this.edge[i].children[0] : this.edge[i].children[1];
-					this.children[1].edge[children[1].vertexSize++] = edge[i].children[0].label == FixedEdge ? this.edge[i].children[0] : this.edge[i].children[1];
+					this.children[0].edge[this.children[0].vertexSize++] = this.edge[i].children[0].label == MovedEdge ? this.edge[i].children[0] : this.edge[i].children[1];
+					this.children[1].edge[this.children[1].vertexSize++] = this.edge[i].children[0].label == FixedEdge ? this.edge[i].children[0] : this.edge[i].children[1];
 					if (this.vertex(i).label == Moved){
 						this.newEdge.vertex[0] = this.edge[i].newVertex;
-						this.children[0].edge[children[0].vertexSize++] = this.newEdge;
+						this.children[0].edge[this.children[0].vertexSize++] = this.newEdge;
 					}else{
 						this.newEdge.vertex[1] = this.edge[i].newVertex;
-						this.children[1].edge[children[1].vertexSize++] = this.newEdge;
+						this.children[1].edge[this.children[1].vertexSize++] = this.newEdge;
 					}
 					break;
 			}

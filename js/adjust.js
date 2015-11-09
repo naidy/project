@@ -62,6 +62,7 @@ Adjust.prototype.correctBend = function (stage){  //stage
 Adjust.prototype.adjustDiagonal = function (stage){
 	var cd0 = new DV();
 	var cd1 = new DV();
+	//console.log (stage.fold);
 	stage.fold.faceGroup.closestVertex (stage.fold.axis, cd0);
 	stage.fold.faceGroup.closestVertex3 (stage.fold.axis, cd1, cd0.vertex.position);
 	if (cd0.distance < this.margin && cd1.distance < this.margin){

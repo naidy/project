@@ -181,7 +181,6 @@ FaceGroup.prototype.renew = function (birthStage, fold){  //int fold
 		return RenewFailure;
 	this.clearEdgeAndFaceLabels();
 	var renewFailure = false;
-	console.log (fold);
 	if (fold.pickedFace().renew(birthStage, this.ID, fold) == RenewFailure)
 		renewFailure = true;
 	else if (fold.pickedFace().label == FixedFace)

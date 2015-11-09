@@ -54,7 +54,7 @@ Fold.prototype.setPick2 = function (faceGroup, viewDirection){  //facegroup vect
 		for (i = faceGroup.faceSize - 1; i >= 0; i--){
 			if (this.setPick(faceGroup.face[i])){
 				this.faceID = i;
-				this.face = faceGroup[this.faceID];
+				this.face = faceGroup.face[this.faceID];
 				this.faceGroup = faceGroup;
 				return true;
 			}
@@ -114,7 +114,6 @@ Fold.prototype.update2 = function(destination, eyePosition, inBending){  //vecto
 			var v = new Vector();
 			v.add2(destination, viewLine);
 			var line = new Line();
-			console.log (destination);
 			line.set (destination, v);
 			destination.intersection(line, pickedPlane);
 			this.type = viewLine.dot(pickedPlane.normal) > 0 ? FoldDown : FoldUp;

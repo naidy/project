@@ -80,7 +80,6 @@ function init() {
 }
 
 function display(){
-    eyePosition.set2 (camera.position.x, camera.position.y, camera.position.z);
     Origami.draw (eyePosition);
     Origami.drawAdjust();
 }
@@ -134,7 +133,7 @@ function onMouseDown(event){
 function onDocumentMouseDown(event)
 {
     mouseDown = true;
-    //onMouseDown(event);
+    onMouseDown(event);
 }
 
 function onDocumentMouseUp(event){
@@ -164,8 +163,10 @@ function animate() {
 
 function update() 
 {
-	control.update();
+    control.update();
     keyboard.update();
+    
+    eyePosition.set (camera.position.x, camera.position.y, camera.position.z);
     
     timer();
     if (State.inFolding == true){

@@ -8,9 +8,11 @@ var ArrangeAngle = 'ArrangeAngle';
 var Adjust = function(){
 	this.type;
 	this.markVertex = [];
-	this.markEdge = [];
+	this.markEdge;
 	this.margin;
 	this.marginAngle;
+
+	this.set();
 }
 
 Adjust.prototype.clear = function(){
@@ -19,7 +21,7 @@ Adjust.prototype.clear = function(){
 
 Adjust.prototype.set = function(){
 	this.clear();
-	this.margin = 0.5;
+	this.margin = 0.3;
 	this.marginAngle = 5.0;
 }
 
@@ -117,8 +119,7 @@ Adjust.prototype.adjustEdge = function (stage){
 			}else{
 				var axis = new Line();
 				axis.equidistance (line[0], line[1]);
-				stage.fold.destination.set2(stage.fold.vertex.position);
-				stage.fold.destination.rotate3(axis, stage.fold.angle);
+				stage.fold.destination.rotate4(stage.fold.vertex.position, axis, stage.fold.angle);
 			}
 			stage.fold.update();
 			return true;
@@ -131,6 +132,8 @@ Adjust.prototype.adjustEdge = function (stage){
 
 Adjust.prototype.correctDestination = function (stage){  //stage
 	this.type = NoAdjust;
+	if (keyboard.down("F"))
+		return;
 	if (this.adjustVertex(stage))
 		return;
 	if (stage.fold.isBend() && this.correctBend(stage))

@@ -74,8 +74,7 @@ Fold.prototype.update = function (margin){  //double
 	if (this.boundary.normal.abs() < margin)
 		return true;
 	var tmp = new Vector();
-	tmp.set2 (this.faceGroup.normal);
-	tmp.reverse();
+	tmp.reverse2 (this.faceGroup.normal);
 	if (this.type == BendDown || this.type == FoldDown)
 		this.angle = -2.0 * this.boundary.normal.angle(tmp);
 	else
@@ -140,7 +139,7 @@ Fold.prototype.pickedFace = function(){
 Fold.prototype.vertexLabel = function (position, margin){  //vector double
 	var v = new Vector();
 	v.sub2(position, this.boundary.passage);
-	var distance = v.dot(this.boundary.normal);
+	var distance = this.boundary.normal.dot(v);
 	if (Math.abs(distance) < margin)
 		return OnAxis;
 	else if (distance < 0)
@@ -159,8 +158,7 @@ Fold.prototype.newVertexPosition = function (v1, v2){  //vector vector
 
 Fold.prototype.rotateVertexPosition = function (v){  //vector
 	var position = new Vector();
-	v.rotate3(this.axis, this.angle);
-	position.set2(v);
+	position.rotate4(v, this.axis, this.angle);
 	return position;
 }
 

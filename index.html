@@ -97,10 +97,12 @@ function lightVertex(pos)
     var vertex = new THREE.Mesh (new THREE.CylinderGeometry(.5,.5,.1,32),
         new THREE.MeshBasicMaterial({color:0xffff00}));
     vertex.rotation.x = Math.PI/2;
-    vertex.position.copy (pos);
+    vertex.position.set(pos.x, pos.y, pos.z);
 
     scene.add (vertex); 
     objects.push(vertex);
+
+    console.log ('light');
 }
 
 function onMouseDown(event){

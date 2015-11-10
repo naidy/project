@@ -33,11 +33,8 @@ Plane.prototype.distance = function(point){  //vector
 }
 
 Plane.prototype.equidistance = function(a, b){  //vector vector
-	var tmp = new Vector();
-	tmp.sub2(b, a);
-	this.normal.set2(tmp);
-	tmp.add2(a, b);
-	this.passage.set2(tmp);
+	this.normal.sub2(b, a);
+	this.passage.add2(a, b);
 	this.passage.mul(0.5);
 }
 

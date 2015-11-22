@@ -379,15 +379,8 @@ Face.prototype.whichSide = function (plane, margin){  //plane double
 		return Across;
 }
 
-Face.prototype.draw = function (faceNumber){  //int
-	var color;
-	if (faceNumber == 0)
-		color = new THREE.Color (0x00ffff);
-	else if (faceNumber == 1)
-		color = new THREE.Color (0xff0000);
-
-	/////////////////////////////////
-
+Face.prototype.draw = function (faceNormal){  //vector
+	var which = faceNormal.dot(this.normal());
 	var shape = new THREE.Shape();
     var i;
     for (i = 0; i < this.vertexSize; i++){
@@ -399,16 +392,33 @@ Face.prototype.draw = function (faceNumber){  //int
     shape.lineTo (this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z);
     
     var paperGeo = new THREE.ShapeGeometry (shape);
-    var mFront = new THREE.MeshBasicMaterial ({color: 0x00ffff, side: THREE.DoubleSide});
-    //var mBack = new THREE.MeshBasicMaterial ({color: 0xff0000, side: THREE.BackSide});
 
-    var paper = new THREE.Mesh (paperGeo, mFront);
+    var fc = new THREE.Color(0xff0000);
+    var bc = new THREE.Color(0x00ffff);
+    var shaderMaterial = new THREE.ShaderMaterial({
+    	side: THREE.DoubleSide,
+    	uniforms: {
+    		front: {
+    			type: 'c',
+    			value: fc
+    		},
+    		back: {
+    			type: 'c',
+    			value: bc
+    		},
+    		n: {
+    			type: 'f',
+    			value: which
+    		}
+    	},
+    	vertexShader: document.getElementById('myVertexShader').textContent,
+    	fragmentShader: document.getElementById('myFragmentShader').textContent
+    });
+
+    var paper = new THREE.Mesh (paperGeo, shaderMaterial);
     scene.add (paper);
 
     objects.push(paper);
-
-    /*var paperBack = new THREE.Mesh (paperGeo, mBack);
-    paper.add (paperBack);*/
 }
 
 //other

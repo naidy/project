@@ -32,6 +32,27 @@
 <script src="js/return.js"></script>
 <script src="js/adjust.js"></script>
 
+<script id="myVertexShader" type="x-shader/x-vertex">
+    void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+</script>
+<script id="myFragmentShader" type="x-shader/x-fragment">
+    uniform vec3 front;
+    uniform vec3 back;
+    uniform float n;
+
+    void main() {
+        vec3 color;
+
+        if (n > 0.0)
+            color = front;
+        else
+            color = back;
+        gl_FragColor = vec4(color, 1.0);
+    }
+</script>
+
 <script>
 
 var camera, scene, renderer, control;
@@ -66,6 +87,8 @@ function init() {
     camera.position.z = 50;
     camera.lookAt (new THREE.Vector3 (0,0,0));
     scene.add(camera);
+
+    eyePosition.set (camera.position.x, camera.position.y, camera.position.z);
 
     //control
     control = new THREE.OrbitControls(camera, renderer.domElement);
@@ -106,8 +129,13 @@ function lightVertex(pos)
 }
 
 function onMouseDown(event){
-    if (event.button != 0 || State.inAnimation || State.inRotation)
+    if (State.inAnimation || State.inRotation)
         return;
+    if (event.button == 2){
+        resetScene();
+        display();
+        return;
+    }
 
     var vector = new THREE.Vector3();
     vector.set(
@@ -120,13 +148,13 @@ function onMouseDown(event){
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
     Cursor3D.set (pos.x, pos.y, pos.z);
-    console.log (Cursor3D.x+" "+Cursor3D.y+" "+Cursor3D.z);
+    //console.log (Cursor3D.x+" "+Cursor3D.y+" "+Cursor3D.z);
 
     var p = new Vector(pos.x, pos.y, pos.z);
     var v = new Vector(Cursor3D.x, Cursor3D.y, Cursor3D.z);
     var picked = new Vector();
     picked.set2(Origami.pickVertex(v));
-    console.log (picked);
+    //console.log (picked);
 
     if (picked.distance(p) <= 0.3)
         State.inFolding = true;

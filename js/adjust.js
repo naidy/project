@@ -147,7 +147,7 @@ Adjust.prototype.correctDestination = function (stage){  //stage
 Adjust.prototype.draw = function (){  //double
 	switch (this.type){
 		case AdjustVertex:
-			lightVertex(this.markVertex[0]);
+			lightVertex(this.markVertex[0].position);
 			break;
 		case AdjustEdge:
 			if (this.markEdge.label == DividedEdge){
@@ -162,12 +162,12 @@ Adjust.prototype.draw = function (){  //double
 				this.markVertex[0] = this.markEdge.vertex[0];
 				this.markVertex[1] = this.markEdge.vertex[1];
 			}
-			lightVertex(this.markVertex[0]);
-			lightVertex(this.markVertex[1]);
+			lightVertex(this.markVertex[0].position);
+			lightVertex(this.markVertex[1].position);
 			break;
 		case DiagonalFold:
-			lightVertex(this.markVertex[0]);
-			lightVertex(this.markVertex[1]);
+			lightVertex(this.markVertex[0].position);
+			lightVertex(this.markVertex[1].position);
 			break;
 	}
 }

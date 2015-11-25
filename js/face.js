@@ -379,7 +379,7 @@ Face.prototype.whichSide = function (plane, margin){  //plane double
 		return Across;
 }
 
-Face.prototype.draw = function (faceNormal){  //vector
+Face.prototype.draw = function (faceNormal, z){  //vector double
 	var which = faceNormal.dot(this.normal());
 	var shape = new THREE.Shape();
     var i;
@@ -390,11 +390,9 @@ Face.prototype.draw = function (faceNormal){  //vector
     		shape.lineTo (this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z);
     }
     shape.lineTo (this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z);
-    
     var paperGeo = new THREE.ShapeGeometry (shape);
-
     var fc = new THREE.Color(0xff0000);
-    var bc = new THREE.Color(0x00ffff);
+    var bc = new THREE.Color(0xffffff);
     var shaderMaterial = new THREE.ShaderMaterial({
     	side: THREE.DoubleSide,
     	uniforms: {
@@ -414,11 +412,25 @@ Face.prototype.draw = function (faceNormal){  //vector
     	vertexShader: document.getElementById('myVertexShader').textContent,
     	fragmentShader: document.getElementById('myFragmentShader').textContent
     });
-
     var paper = new THREE.Mesh (paperGeo, shaderMaterial);
+    paper.position.z += z;
     scene.add (paper);
-
     objects.push(paper);
+
+    var material = new THREE.LineBasicMaterial({color: 0xffff00});
+	var geometry = new THREE.Geometry();
+	for (i = 0; i < this.vertexSize; i++){
+		var p = new THREE.Vector3();
+		p.set (this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z + z);
+		geometry.vertices.push(p);
+	}
+	var p = new THREE.Vector3();
+	p.set(this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z + z);
+	geometry.vertices.push(p);
+
+	var line = new THREE.Line(geometry, material);
+	scene.add (line);
+	objects.push(line);
 }
 
 //other

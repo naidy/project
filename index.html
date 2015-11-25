@@ -31,6 +31,7 @@
 <script src="js/KeyboardState.js"></script>
 <script src="js/return.js"></script>
 <script src="js/adjust.js"></script>
+<script src="js/dat.gui.min.js"></script>
 
 <script id="myVertexShader" type="x-shader/x-vertex">
     void main() {
@@ -117,7 +118,7 @@ function resetScene(){
 
 function lightVertex(pos)
 {
-    var vertex = new THREE.Mesh (new THREE.CylinderGeometry(.5,.5,.1,32),
+    var vertex = new THREE.Mesh (new THREE.CylinderGeometry(.3,.3,.1,32),
         new THREE.MeshBasicMaterial({color:0xffff00}));
     vertex.rotation.x = Math.PI/2;
     vertex.position.set(pos.x, pos.y, pos.z);
@@ -125,7 +126,7 @@ function lightVertex(pos)
     scene.add (vertex); 
     objects.push(vertex);
 
-    console.log ('light');
+    //console.log ('light');
 }
 
 function onMouseDown(event){
@@ -171,6 +172,9 @@ function onDocumentMouseUp(event){
 
     Origami.releaseVertex();
     State.inFolding = false;
+
+    resetScene();
+    display();
 }
 
 function onDocumentMouseMove(event){
@@ -191,11 +195,25 @@ function animate() {
     render();
 }
 
+function keyBoard(){
+    if (keyboard.down('Z')){
+        Origami.reset();
+        resetScene();
+        display();
+    }
+    else if (keyboard.down('I')){
+        Origami.reset2(0);
+        resetScene();
+        display();
+    }
+}
+
 function update() 
 {
     control.update();
     keyboard.update();
-    
+
+    keyBoard();
     eyePosition.set (camera.position.x, camera.position.y, camera.position.z);
     
     timer();

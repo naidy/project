@@ -216,3 +216,98 @@ Vector.prototype.unitZ = function(){
 Vector.prototype.zero = function(){
 	this.set(0, 0, 0);
 }
+
+/////////////////////////////////////////////////////////
+var Vector2D = function (x, y){
+	this.x = x || 0;
+	this.y = y || 0;
+}
+
+Vector2D.prototype.set = function (x, y){  //double*2
+	this.x = x;
+	this.y = y;
+}
+
+Vector2D.prototype.set2 = function (a){  //vector2D
+	this.x = a.x;
+	this.y = a.y;
+}
+
+Vector2D.prototype.abs = function(){
+	return Math.sqrt(this.x*this.x + this.y*this.y);
+}
+
+Vector2D.prototype.abs2 = function(){
+	return this.x*this.x + this.y*this.y;
+}
+
+Vector2D.prototype.add = function (a){  //vector2D
+	this.x += a.x;
+	this.y += a.y;
+}
+
+Vector2D.prototype.add2 = function (a, b){  //vector2D*2
+	this.x = a.x + b.x;
+	this.y = a.y + b.y;
+}
+
+Vector2D.prototype.add3 = function (a, b){  //double*2
+	this.x += a;
+	this.y += b;
+}
+
+Vector2D.prototype.sub = function (a){  //vector2D
+	this.x -= a.x;
+	this.y -= a.y;
+}
+
+Vector2D.prototype.sub2 = function (a, b){  //vector2D*2
+	this.x = a.x - b.x;
+	this.y = a.y - b.y;
+}
+
+Vector2D.prototype.sub3 = function (a, b){  //double*2
+	this.x -= a;
+	this.y -= b;
+}
+
+Vector2D.prototype.mul = function (k){  //double
+	this.x *= k;
+	this.y *= k;
+}
+
+Vector2D.prototype.mul2 = function (k, a){  //double vector2D
+	this.x = k*a.x;
+	this.y = k*a.y;
+}
+
+Vector2D.prototype.divide = function (a, b, m, n){  //vector2D*2 double*2
+	if (Math.abs(m+n) < DBL_EPSILON){
+		console.log ('Unexpected ratio '+m+' : '+n+' in Vector::divide()!');
+		return 1;
+	}
+	var c = new Vector2D();
+	c.mul2(n, a);
+	this.mul2(m, b);
+	this.add(c);
+	this.mul(1/(m+n));
+	return 0;
+}
+
+Vector2D.prototype.angle = function (a){  //vector2D
+	return Math.acos((a.x*this.x+a.y*this.y) / Math.sqrt(a.abs2()*this.abs2()));
+}
+
+Vector2D.prototype.distance = function (a){  //vector2D
+	return Math.sqrt((this.x-a.x)*(this.x-a.x) + (this.y-a.y)*(this.y-a.y));
+}
+
+Vector2D.prototype.distance2 = function (a){  //vector2D
+	return (this.x-a.x)*(this.x-a.x) + (this.y-a.y)*(this.y-a.y);
+}
+
+Vector2D.prototype.exchange = function (a){  //vector2D
+	var b = new Vector2D (a.x, a.y);
+	a.set (this.x, this.y);
+	this.set (b.x, b.y);
+}

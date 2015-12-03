@@ -42,6 +42,8 @@ Face.prototype.connectFace = function (i){  //int
 }
 
 Face.prototype.setOriginal = function(){
+	this.birthStage = 0;
+	this.faceGroupID = 0;
 	this.vertexSize = 4;
 	var position = [];
 	var i;
@@ -52,12 +54,12 @@ Face.prototype.setOriginal = function(){
 	position[2].set (-10, -10, 0);
 	position[3].set (10, -10, 0);
 
-	/*var texcoord = [];
+	var texcoord = [];
 	var xmin, xmax, ymin, ymax;
 	xmin = xmax = position[0].x;
 	ymin = ymax = position[0].y;
 	for (i = 0; i < this.vertexSize; i++){
-		texcoord[i] = new THREE.Vector2();
+		texcoord[i] = new Vector2D();
 
 		if (position[i].x < xmin)
 			xmin = position[i].x;
@@ -71,14 +73,14 @@ Face.prototype.setOriginal = function(){
 	for (i = 0; i < this.vertexSize; i++){
 		texcoord[i].x = (position[i].x - xmin)/(xmax - xmin);
 		texcoord[i].y = (position[i].y - ymin)/(ymax - ymin);
-	}*/
+	}
 
 	this.edge = [];
 	for (i = 0; i < this.vertexSize; i++){
 		this.edge[i] = new Edge();
 		this.edge[i].face[0] = this;
 		this.edge[i].vertex[0] = new Vertex();
-		this.edge[i].vertex[0].set (position[i]);
+		this.edge[i].vertex[0].set (position[i], texcoord[i]);
 	}
 	for (i = 0; i < this.vertexSize; i++)
 		this.edge[i].vertex[1] = this.edge[(i+1)%this.vertexSize].vertex[0];
@@ -393,6 +395,8 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
     var paperGeo = new THREE.ShapeGeometry (shape);
     var fc = new THREE.Color(0xff0000);
     var bc = new THREE.Color(0xffffff);
+    THREE.ImageUtils.crossOrigin = '';
+    var texture = THREE.ImageUtils.loadTexture('image/tex1.jpg');
     var shaderMaterial = new THREE.ShaderMaterial({
     	side: THREE.DoubleSide,
     	uniforms: {
@@ -407,6 +411,10 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
     		n: {
     			type: 'f',
     			value: which
+    		},
+    		tex: {
+    			type: 't',
+    			value: texture
     		}
     	},
     	vertexShader: document.getElementById('myVertexShader').textContent,

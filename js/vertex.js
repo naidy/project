@@ -13,16 +13,16 @@ var MovedAndFixed = 'MovedAndFixed';
 var Vertex = function(){
 	this.birthStage = 0;
 	this.position = new Vector();
-	//this.texcoord = new THREE.Vector2();
+	this.texcoord = new Vector2D();
 	this.label;
 	this.parent;
 	this.child;
 }
 
-Vertex.prototype.set = function(position){  //vector
+Vertex.prototype.set = function(position, texcoord){  //vector vector2D
 	this.birthStage = 0;
 	this.position.set2(position);
-	//this.texcoord.copy (texcoord);
+	this.texcoord.set2(texcoord);
 	this.parent = this.child = null;
 }
 
@@ -41,16 +41,18 @@ Vertex.prototype.setLabel = function(fold, margin){  //fold  double
 Vertex.prototype.set2 = function(vertex1, vertex2, birthStage, fold){  //vertex vertex int fold
 	this.birthStage = birthStage;
 	this.position.set2(fold.newVertexPosition(vertex1.position, vertex2.position));
-	/*var m = vertex1.position.distanceTo(this.position);
-	var n = vertex2.position.distanceTo(this.position);
-	Vector2Divied(this.texcoord, vertex1.texcoord, vertex2.texcoord, m, n);*/
+	var m = vertex1.position.distance(this.position);
+	var n = vertex2.position.distance(this.position);
+	this.texcoord.divide(vertex1.texcoord, vertex2.texcoord, m, n);
+	this.parent = this.child = null;
 }
 
 Vertex.prototype.set3 = function(parentVertex, birthStage, fold){  //vertex int fold
 	this.birthStage = birthStage;
 	this.position.set2(fold.rotateVertexPosition(parentVertex.position));
-	//this.texcoord.copy (parentVertex.texcoord);
+	this.texcoord.set2(parentVertex.texcoord);
 	this.parent = parentVertex;
+	this.child = null;
 }
 
 Vertex.prototype.renew = function (birthStage, fold){  //int fold

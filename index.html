@@ -112,6 +112,7 @@ function init() {
 function display(){
     Origami.draw (eyePosition);
     Origami.drawAdjust();
+    //console.log ('display');
 }
 
 function resetScene(){
@@ -163,8 +164,11 @@ function onMouseDown(event){
     picked.set2(Origami.pickVertex(v));
     //console.log (picked);
 
-    if (picked.distance(p) <= 0.3)
+    if (picked.distance(p) <= 0.3){
         State.inFolding = true;
+        resetScene();
+        display();
+    }
 }
 
 function onDocumentMouseDown(event)
@@ -223,10 +227,6 @@ function update()
     eyePosition.set (camera.position.x, camera.position.y, camera.position.z);
     
     timer();
-    if (State.inFolding == true){
-        resetScene();
-        display();
-    }
 
     cnt = 0;
     scene.traverse( function( child ) {

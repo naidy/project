@@ -395,8 +395,12 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
     var paperGeo = new THREE.ShapeGeometry (shape);
     var fc = new THREE.Color(0xff0000);
     var bc = new THREE.Color(0xffffff);
+    
     THREE.ImageUtils.crossOrigin = '';
-    var texture = THREE.ImageUtils.loadTexture('image/tex1.jpg');
+    var texture = THREE.ImageUtils.loadTexture('image/tex2.png');
+    texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+    
     var shaderMaterial = new THREE.ShaderMaterial({
     	side: THREE.DoubleSide,
     	uniforms: {
@@ -439,6 +443,7 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
 	var line = new THREE.Line(geometry, material);
 	scene.add (line);
 	objects.push(line);
+	//console.log (this.vertex(0));
 }
 
 //other

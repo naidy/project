@@ -69,6 +69,9 @@ var objects = [];
 var cnt = 0;
 var mouseDown = false;
 
+//face texture
+var texture, fc, bc;
+
 var Origami = new Origami();
 var State = new State();
 var Cursor3D = new cursor3D();
@@ -99,6 +102,15 @@ function init() {
 
     //control
     control = new THREE.OrbitControls(camera, renderer.domElement);
+
+    //face texture
+    fc = new THREE.Color(0xff0000);
+    bc = new THREE.Color(0xffffff);
+
+    THREE.ImageUtils.crossOrigin = '';
+    texture = THREE.ImageUtils.loadTexture('image/tex1.png');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
 	
 	Origami.setOriginal();
     display();
@@ -164,7 +176,7 @@ function onMouseDown(event){
     picked.set2(Origami.pickVertex(v));
     //console.log (picked);
 
-    if (picked.distance(p) <= 0.3){
+    if (picked.distance(p) <= 0.5){
         State.inFolding = true;
         resetScene();
         display();
@@ -228,12 +240,14 @@ function update()
     
     timer();
 
+    /*
     cnt = 0;
     scene.traverse( function( child ) {
     if( child instanceof THREE.Mesh )
         cnt++;
     } );
-    //console.log (cnt);
+    console.log (cnt);
+    */
 }
 
 function render() 

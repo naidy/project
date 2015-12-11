@@ -383,7 +383,7 @@ Face.prototype.whichSide = function (plane, margin){  //plane double
 
 Face.prototype.draw = function (faceNormal, z){  //vector double
 	var which = faceNormal.dot(this.normal());
-	var shape = new THREE.Shape();
+	/*var shape = new THREE.Shape();
     var i;
     for (i = 0; i < this.vertexSize; i++){
     	if (i < 1)
@@ -393,43 +393,56 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
     }
     shape.lineTo (this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z);
     var paperGeo = new THREE.ShapeGeometry (shape);
-    var fc = new THREE.Color(0xff0000);
-    var bc = new THREE.Color(0xffffff);
-    
-    THREE.ImageUtils.crossOrigin = '';
-    var texture = THREE.ImageUtils.loadTexture('image/tex2.png');
-    texture.wrapS = THREE.RepeatWrapping;
-	texture.wrapT = THREE.RepeatWrapping;
-    
+*/
+    var paperGeo = new THREE.Geometry();
+    var i;
+    for (i = 0; i < this.vertexSize; i++){
+    	paperGeo.vertices.push(new THREE.Vector3(this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z));
+    }
+    var face;
+    for (i = 0; i < this.vertexSize - 2; i++){
+    	face = new THREE.Face3(0, i+1, i+2);
+    	paperGeo.faces.push(face);
+    }
+    for (i = 0; i < this.vertexSize - 2; i++){
+    	paperGeo.faceVertexUvs[0].push([new THREE.Vector2(this.vertex(0).texcoord.x, this.vertex(0).texcoord.y),
+    		new THREE.Vector2(this.vertex(i+1).texcoord.x, this.vertex(i+1).texcoord.y),
+    		new THREE.Vector2(this.vertex(i+2).texcoord.x, this.vertex(i+2).texcoord.y)]);
+    }
+    paperGeo.computeBoundingSphere();
+	paperGeo.computeFaceNormals();
+	paperGeo.computeVertexNormals();
+
     var shaderMaterial = new THREE.ShaderMaterial({
-    	side: THREE.DoubleSide,
-    	uniforms: {
-    		front: {
-    			type: 'c',
-    			value: fc
-    		},
-    		back: {
-    			type: 'c',
-    			value: bc
-    		},
-    		n: {
-    			type: 'f',
-    			value: which
-    		},
-    		tex: {
-    			type: 't',
-    			value: texture
-    		}
-    	},
-    	vertexShader: document.getElementById('myVertexShader').textContent,
-    	fragmentShader: document.getElementById('myFragmentShader').textContent
+        side: THREE.DoubleSide,
+        uniforms: {
+            front: {
+                type: 'c',
+                value: fc
+            },
+            back: {
+                type: 'c',
+                value: bc
+            },
+            n: {
+                type: 'f',
+                value: which
+            },
+            tex: {
+                type: 't',
+                value: texture
+            }
+        },
+        vertexShader: document.getElementById('myVertexShader').textContent,
+        fragmentShader: document.getElementById('myFragmentShader').textContent
     });
+    
     var paper = new THREE.Mesh (paperGeo, shaderMaterial);
     paper.position.z += z;
     scene.add (paper);
     objects.push(paper);
 
-    var material = new THREE.LineBasicMaterial({color: 0xffff00});
+    var material = new THREE.LineBasicMaterial({color: 0x000000});
 	var geometry = new THREE.Geometry();
 	for (i = 0; i < this.vertexSize; i++){
 		var p = new THREE.Vector3();

@@ -171,3 +171,96 @@ Fold.prototype.rotateNormal = function (normal){  //vector
 	vo.sub2(v2, v1);
 	return vo;
 }
+
+Fold.prototype.save = function (ID){  //int
+	var c;
+	switch (this.type){
+		case FoldUp:
+			c = 'F';
+			break;
+		case FoldDown:
+			c = 'f';
+			break;
+		case TuckIn:
+			c = 'T';
+			break;
+		case BendUp:
+			c = 'B';
+			break;
+		case BendDown:
+			c = 'b';
+			break;
+		default: c = 'U';
+	}
+	localStorage.setItem("origami_type"+ID, c);
+	localStorage.setItem("origami_faceGroup"+ID, this.faceGroup.ID);
+	localStorage.setItem("origami_face"+ID, this.faceID);
+	localStorage.setItem("origami_vertex"+ID, this.vertexID);
+	localStorage.setItem("origami_x"+ID, this.destination.x);
+	localStorage.setItem("origami_y"+ID, this.destination.y);
+	localStorage.setItem("origami_z"+ID, this.destination.z);
+}
+
+Fold.prototype.load = function (ID, faceGroup){  //int  facegroup
+	var c = localStorage.getItem("origami_type"+ID);
+	if (c != 'F' && c != 'f' && c != 'T' && c != 'B' && c != 'b' && c != 'U')
+		return false;
+	switch (c){
+		case 'F':
+			this.type = FoldUp;
+			break;
+		case 'f':
+			this.type = FoldDown;
+			break;
+		case 'T':
+			this.type = TuckIn;
+			break;
+		case 'B':
+			this.type = BendUp;
+			break;
+		case 'b':
+			this.type = BendDown;
+			break;
+	}
+	var faceGroupID = Number(localStorage.getItem("origami_faceGroup"+ID));
+	this.faceID = Number(localStorage.getItem("origami_face"+ID));
+	this.vertexID = Number(localStorage.getItem("origami_vertex"+ID));
+	this.destination.x = Number(localStorage.getItem("origami_x"+ID));
+	this.destination.y = Number(localStorage.getItem("origami_y"+ID));
+	this.destination.z = Number(localStorage.getItem("origami_z"+ID));
+	this.faceGroup = faceGroup[faceGroupID];
+	this.face = faceGroup[faceGroupID].face[this.faceID];
+	this.vertex = this.face.vertex(this.vertexID);
+	this.update();
+	this.backup();
+	return true;
+}
+
+Fold.prototype.backup = function(){
+	this.destination2 = this.destination;
+	this.type2 = this.type;
+	this.boundary2 = this.boundary;
+	this.axis2 = this.axis;
+	this.angle2 = this.angle;
+}
+
+Fold.prototype.modify = function (position){  //double
+	this.destination = this.destination2; 
+	this.type = this.type2;
+	this.boundary = this.boundary2;
+	this.axis = this.axis2;
+	this.angle = this.angle2;
+	if (position < 1.0){
+		if (this.type == TuckIn){
+			this.destination.divide(this.vertex.position, this.destination, position, 1.0-position);
+		}
+		else {
+			if (this.type == FoldUP)
+				this.type = BendUp;
+			else if (this.type == FoldDown)
+				this.type = BendDown;
+			this.angle *= position;
+			this.destination = this.rotateVertexPosition(this.vertex.position);
+		}
+	}
+}

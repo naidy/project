@@ -108,3 +108,11 @@ Stage.prototype.draw = function (eyePosition){  //vector
 		renderGroup[i].draw (eyePosition);
 	delete renderGroup;
 }
+
+Stage.prototype.saveFold = function (ID){  //int
+	this.fold.save(ID);
+}
+
+Stage.prototype.loadFold = function (ID){  //int
+	return this.fold.load(ID, this.faceGroup);
+}

@@ -32,6 +32,7 @@
 <script src="js/return.js"></script>
 <script src="js/adjust.js"></script>
 <script src="js/dat.gui.min.js"></script>
+<script src="js/localStorage.js"></script>
 
 <script id="myVertexShader" type="x-shader/x-vertex">
     varying vec2 vUv;
@@ -228,6 +229,22 @@ function keyBoard(){
         resetScene();
         display();
     }
+    else if (keyboard.down('A')){
+        if (!State.inFolding && !State.inAnimation){
+            clearlog();
+            Origami.save();
+            Origami.reset2(0);
+            Origami.animation.position = -1.0;
+            State.inAnimation = true;
+            Origami.animation.step = 0;
+        }
+        else {
+            Origami.load();
+            State.inAnimation = false;
+        }
+        resetScene();
+        display();
+    }
 }
 
 function update() 
@@ -271,6 +288,9 @@ function timer(){
     else if (State.inAnimation){
         if (Origami.play(State.fps))
             State.inAnimation = false;
+
+            resetScene();
+            display();
     }
 }
 

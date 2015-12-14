@@ -1,6 +1,7 @@
 //animation
 var Animation = function(){
 	var position;
+	var step = 0;
 }
 
 Animation.prototype.updatePosition = function (delta){ //double
@@ -75,4 +76,40 @@ Origami.prototype.draw = function (eyePosition){  //vector
 Origami.prototype.drawAdjust = function(){
 	if (this.tentative)
 		this.adjust.draw();
+}
+
+Origami.prototype.save = function(){
+	var i;
+	for (i = 0; i < this.maxStage; i++)
+		this.stage[i].saveFold(i);
+}
+
+Origami.prototype.load = function(){
+	this.reset2(0);
+	while (this.stage[this.maxStage].loadFold(this.maxStage)){
+		this.stage[this.maxStage].renew();
+		this.stage[this.maxStage+1] = new Stage();
+		this.stage[this.maxStage+1].newStage(this.stage[this.maxStage]);
+		this.maxStage++;
+	}
+}
+
+Origami.prototype.play = function (fps){  //int
+	if (this.animation.position < 0.0){
+		if (!this.stage[this.maxStage].loadFold(this.animation.step)){
+			return true;
+		}
+		this.animation.step++;
+	}
+	else {
+		this.reset();
+	}
+	this.stage[this.maxStage].fold.modify(this.animation.updatePosition(1.0/fps));
+	this.stage[this.maxStage].renew();
+	this.stage[this.maxStage+1] = new Stage();
+	this.stage[this.maxStage+1].newStage(this.stage[this.maxStage]);
+	this.maxStage++;
+	if (this.animation.position >= 1.0)
+		this.animation.position = -1.0;
+	return false;
 }

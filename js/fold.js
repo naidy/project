@@ -255,7 +255,7 @@ Fold.prototype.modify = function (position){  //double
 			this.destination.divide(this.vertex.position, this.destination, position, 1.0-position);
 		}
 		else {
-			if (this.type == FoldUP)
+			if (this.type == 'FoldUP')
 				this.type = BendUp;
 			else if (this.type == FoldDown)
 				this.type = BendDown;

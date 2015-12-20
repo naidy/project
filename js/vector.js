@@ -68,6 +68,7 @@ Vector.prototype.mul = function (k){  //double
 	this.x *= k;
 	this.y *= k;
 	this.z *= k;
+	return this;
 }
 
 Vector.prototype.mul2 = function (k, a){  //double vector
@@ -85,7 +86,7 @@ Vector.prototype.divide = function (a, b, m, n){  //vector*2 double*2
 	c.mul2(n, a);
 	this.mul2(m, b);
 	this.add(c);
-	this.mul(1/(m+n));
+	this.mul(1.0/(m+n));
 	return 0;
 }
 

@@ -102,12 +102,12 @@ Fold.prototype.update2 = function(destination, eyePosition, inBending){  //vecto
 	var viewLine = new Vector();
 	viewLine.sub2(pickedPlane.passage, eyePosition);
 
-	if (keyboard.down("T"))
+	if (KState.T)
 		this.type = TuckIn;
 	else if (inBending)
 		this.type = viewLine.dot(pickedPlane.normal) > 0 ? BendDown : BendUp;
 	else{
-		if (this.isBend() && (viewLine.mul(pickedPlane.signedDistance(destination))).dot(pickedPlane.normal) < 0){
+		if (this.isBend() && (viewLine.mul(pickedPlane.signedDistance(destination)).dot(pickedPlane.normal)) < 0){
 			this.type = viewLine.dot(pickedPlane.normal) > 0 ? BendDown : BendUp;
 		}else{
 			var v = new Vector();
@@ -199,6 +199,13 @@ Fold.prototype.save = function (ID){  //int
 	localStorage.setItem("origami_x"+ID, this.destination.x);
 	localStorage.setItem("origami_y"+ID, this.destination.y);
 	localStorage.setItem("origami_z"+ID, this.destination.z);
+
+	/*console.log (localStorage.getItem("origami_type"+ID));
+	console.log (localStorage.getItem("origami_faceGroup"+ID));
+	console.log (localStorage.getItem("origami_face"+ID));
+	console.log (localStorage.getItem("origami_vertex"+ID));*/
+
+	str += c+" "+this.faceGroup.ID+" "+this.faceID+" "+this.vertexID+" "+this.destination.x+" "+this.destination.y+" "+this.destination.z+" ";
 }
 
 Fold.prototype.load = function (ID, faceGroup){  //int  facegroup
@@ -245,14 +252,16 @@ Fold.prototype.backup = function(){
 }
 
 Fold.prototype.modify = function (position){  //double
-	this.destination = this.destination2; 
+	this.destination = this.destination2;
 	this.type = this.type2;
 	this.boundary = this.boundary2;
 	this.axis = this.axis2;
 	this.angle = this.angle2;
 	if (position < 1.0){
-		if (this.type == TuckIn){
-			this.destination.divide(this.vertex.position, this.destination, position, 1.0-position);
+		if (this.type == 'TuckIn'){
+			var v = new Vector();
+			v.divide(this.vertex.position, this.destination, position, 1.0-position);
+			this.destination = v;
 		}
 		else {
 			if (this.type == 'FoldUP')

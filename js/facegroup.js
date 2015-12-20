@@ -286,39 +286,39 @@ FaceGroup.prototype.constructTuckIn = function (parentFaceGroup){  //facegroup
 	this.normal.set2(parentFaceGroup.normal);
 	this.faceSize = 0;
 	var lowest = 0;
-	while (parentFaceGroup.face[lowest].label != MovedFace && parentFaceGroup.face[lowest].label != DiviedFace)
+	while (parentFaceGroup.face[lowest].label != MovedFace && parentFaceGroup.face[lowest].label != DividedFace)
 		lowest++;
 	var highest = parentFaceGroup.faceSize - 1;
-	while (parentFaceGroup.face[highest].label != MovedFace && parentFaceGroup.face[highest].label != DiviedFace)
+	while (parentFaceGroup.face[highest].label != MovedFace && parentFaceGroup.face[highest].label != DividedFace)
 		highest--;
-	var middle = (lowest + highest) / 2;
+	var middle = Math.floor((lowest + highest) / 2);
 
 	var i;
-	for (i = 0; i < middle; i++){
+	for (i = 0; i <= middle; i++){
 		if (parentFaceGroup.face[i].label == FixedFace || parentFaceGroup.face[i].label == UndoneFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i];
-		}else if (parentFaceGroup.face[i].label == DiviedFace){
+		}else if (parentFaceGroup.face[i].label == DividedFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i].children[1];
 		}
 	}
 	for (i = middle; i >= 0; i--){
 		if (parentFaceGroup.face[i].label == MovedFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i];
-		}else if (parentFaceGroup.face[i].label == DiviedFace){
+		}else if (parentFaceGroup.face[i].label == DividedFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i].children[0];
 		}
 	}
 	for (i = parentFaceGroup.faceSize - 1; i > middle; i--){
 		if (parentFaceGroup.face[i].label == MovedFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i];
-		}else if (parentFaceGroup.face[i].label == DiviedFace){
+		}else if (parentFaceGroup.face[i].label == DividedFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i].children[0];
 		}
 	}
 	for (i = middle + 1; i < parentFaceGroup.faceSize; i++){
 		if (parentFaceGroup.face[i].label == FixedFace || parentFaceGroup.face[i].label == UndoneFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i];
-		}else if (parentFaceGroup.face[i].label == DiviedFace){
+		}else if (parentFaceGroup.face[i].label == DividedFace){
 			this.face[this.faceSize++] = parentFaceGroup.face[i].children[1];
 		}
 	}

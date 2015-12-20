@@ -2,6 +2,7 @@ var State = function(){
 	this.inFolding = false;
 	this.inAnimation = false;
 	this.inRotation = false;
+	this.inBending = false;
 	this.drawAxis = false;
 	this.fps = 60;
 }
@@ -18,4 +19,10 @@ cursor3D.prototype.set = function (x, y, z){  //int int double
 	this.x = x;
 	this.y = y;
 	this.z = z;
+}
+
+var KState = function(){  //for keyboard press
+	this.M = false;
+	this.N = false;
+	this.T = false;
 }

@@ -10,3 +10,9 @@ function clearlog(){
 		localStorage.setItem("origami_z"+ID, null);
 	}
 }
+function saveTXT(){
+	var blob = new Blob ([str], {
+        type: "text/plain;charset=utf-8"
+    });
+    saveAs (blob, "data.txt");
+}

@@ -33,6 +33,7 @@
 <script src="js/adjust.js"></script>
 <script src="js/dat.gui.min.js"></script>
 <script src="js/localStorage.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
 
 <script id="myVertexShader" type="x-shader/x-vertex">
     varying vec2 vUv;
@@ -69,6 +70,7 @@ var eyePosition = new Vector();
 var objects = [];
 var cnt = 0;
 var mouseDown = false;
+var str = "";
 
 //face texture
 var texture, fc, bc;
@@ -76,6 +78,7 @@ var texture, fc, bc;
 var Origami = new Origami();
 var State = new State();
 var Cursor3D = new cursor3D();
+var KState = new KState();
 
 //define
 var DBL_MAX = 10000000;
@@ -168,7 +171,12 @@ function onMouseDown(event){
     var distance = - camera.position.z / dir.z;
     var pos = camera.position.clone().add( dir.multiplyScalar( distance ) );
 
-    Cursor3D.set (pos.x, pos.y, pos.z);
+    if (State.inBending){
+        Cursor3D.x = pos.x;
+        Cursor3D.y = pos.y;
+    }
+    else
+        Cursor3D.set (pos.x, pos.y, pos.z);
     //console.log (Cursor3D.x+" "+Cursor3D.y+" "+Cursor3D.z);
 
     var p = new Vector(pos.x, pos.y, pos.z);
@@ -224,12 +232,12 @@ function keyBoard(){
         resetScene();
         display();
     }
-    else if (keyboard.down('I')){
+    if (keyboard.down('I')){
         Origami.reset2(0);
         resetScene();
         display();
     }
-    else if (keyboard.down('A')){
+    if (keyboard.down('A')){
         if (!State.inFolding && !State.inAnimation){
             clearlog();
             Origami.save();
@@ -244,6 +252,40 @@ function keyBoard(){
         }
         resetScene();
         display();
+    }
+    if (keyboard.down('M')){
+        KState.M = true;
+        resetScene();
+        display();
+    }
+    if (keyboard.up('M')){
+        KState.M = false;
+        resetScene();
+        display();
+    }
+    if (keyboard.down('N')){
+        KState.N = true;
+        resetScene();
+        display();
+    }
+    if (keyboard.up('N')){
+        KState.N = false;
+        resetScene();
+        display();
+    }
+    if (keyboard.down('T')){
+        KState.T = true;
+        resetScene();
+        display();
+    }
+    if (keyboard.up('T')){
+        KState.T = false;
+        resetScene();
+        display();
+    }
+    if (keyboard.down('S')){
+        Origami.save();
+        saveTXT();
     }
 }
 
@@ -274,16 +316,23 @@ function render()
 
 function timer(){
     if (State.inFolding){
-        var inBending = false;
-        if (keyboard.down("M")){
-            Cursor3D.z -= 0.015/60;
-            inBending = true;
+        State.inBending = false;
+        if (KState.M){
+            Cursor3D.z -= 0.015;
+            State.inBending = true;
+            resetScene();
+            display();
         }
-        else if (keyboard.down("N"))
-            Cursor3D.z += 0.015/60;
+        else if (KState.N){
+            Cursor3D.z += 0.015;
+            State.inBending = true;
+            resetScene();
+            display();
+        }
         var destination = new Vector();
         destination.set (Cursor3D.x, Cursor3D.y, Cursor3D.z);
-        Origami.moveVertex (destination, eyePosition, inBending);
+        //console.log (destination);
+        Origami.moveVertex (destination, eyePosition, State.inBending);
     }
     else if (State.inAnimation){
         if (Origami.play(State.fps))

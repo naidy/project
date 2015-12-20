@@ -208,7 +208,7 @@ Fold.prototype.save = function (ID){  //int
 	str += c+" "+this.faceGroup.ID+" "+this.faceID+" "+this.vertexID+" "+this.destination.x+" "+this.destination.y+" "+this.destination.z+" ";
 }
 
-Fold.prototype.load = function (ID, faceGroup){  //int  facegroup
+Fold.prototype.load = function (ID, faceGroup){  //int facegroup
 	var c = localStorage.getItem("origami_type"+ID);
 	if (c != 'F' && c != 'f' && c != 'T' && c != 'B' && c != 'b' && c != 'U')
 		return false;
@@ -235,6 +235,41 @@ Fold.prototype.load = function (ID, faceGroup){  //int  facegroup
 	this.destination.x = Number(localStorage.getItem("origami_x"+ID));
 	this.destination.y = Number(localStorage.getItem("origami_y"+ID));
 	this.destination.z = Number(localStorage.getItem("origami_z"+ID));
+	this.faceGroup = faceGroup[faceGroupID];
+	this.face = faceGroup[faceGroupID].face[this.faceID];
+	this.vertex = this.face.vertex(this.vertexID);
+	this.update();
+	this.backup();
+	return true;
+}
+
+Fold.prototype.load2 = function (ID, faceGroup, data, pt){  //int facegroup string pointer
+	var c = data[pt++];
+	if (c != 'F' && c != 'f' && c != 'T' && c != 'B' && c != 'b' && c != 'U')
+		return false;
+	switch (c){
+		case 'F':
+			this.type = FoldUp;
+			break;
+		case 'f':
+			this.type = FoldDown;
+			break;
+		case 'T':
+			this.type = TuckIn;
+			break;
+		case 'B':
+			this.type = BendUp;
+			break;
+		case 'b':
+			this.type = BendDown;
+			break;
+	}
+	var faceGroupID = Number(data[pt++]);
+	this.faceID = Number(data[pt++]);
+	this.vertexID = Number(data[pt++]);
+	this.destination.x = Number(data[pt++]);
+	this.destination.y = Number(data[pt++]);
+	this.destination.z = Number(data[pt++]);
 	this.faceGroup = faceGroup[faceGroupID];
 	this.face = faceGroup[faceGroupID].face[this.faceID];
 	this.vertex = this.face.vertex(this.vertexID);

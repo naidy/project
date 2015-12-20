@@ -1,20 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Origami Simulation</title>
 <style>
-	body {
-		background-color: #fff;
-		color: #111;
-		margin: 0px;
-		overflow: hidden;
-		font-family: Monospace;
-		font-size: 30px;
-		position: absolute;
-	}
+	#container {
+        width: 70%;
+        float: left;
+        margin-top: 0px;
+    }
+    #cnvsFrame {
+        height: 0;
+        padding-bottom: 70%;
+    }
+    #introduction{
+        float: left;
+        margin: 30px;
+        font-size: large;
+    }
+    .buttonClass {
+        float: left;
+        width: 10%;
+        margin: 30px;
+    }
+    body {
+        overflow: auto;
+    }
 </style>
 </head>
 
 <body>
+
+<div id="container">
+<div id="cnvsFrame">
+    <canvas id="cnvs"> </canvas>
+</div>
+</div>
+
+<button id="bttn1" class="buttonClass" onclick="javascript:axisOnOff()">Axis On/Off (X)
+</button>
+<button id="bttn2" class="buttonClass" onclick="javascript:saveFold()">Save Folding as File (S)
+</button>
+<button id="bttn3" class="buttonClass" onclick="javascript:animateFold()">Animation (A)
+</button>
+<button id="bttn4" class="buttonClass" onclick="javascript:undoFold()">Undo a Fold (Z)
+</button>
+<button id="bttn5" class="buttonClass" onclick="javascript:initFold()">Initialize Folds (I)
+</button>
+
+<input type="file" id="openselect" style="margin: 30px"/>
+
+<div id="introduction">Mouse: LEFT click to fold, RIGHT click to control the camera<br/>Keyboard: [M,N] to control the folding angle, press [T] to do TuckIn</div>
 
 <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
 <script src="js/OrbitControls.js"></script>
@@ -33,6 +68,7 @@
 <script src="js/adjust.js"></script>
 <script src="js/dat.gui.min.js"></script>
 <script src="js/localStorage.js"></script>
+<script src="js/function.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
 
 <script id="myVertexShader" type="x-shader/x-vertex">
@@ -48,12 +84,16 @@
     uniform vec3 back;
     uniform float n;
     uniform sampler2D tex;
+    uniform int mode;
 
     void main() {
         vec3 color;
 
         if (n > 0.0){
-            color = texture2D(tex, vUv).rgb;
+            if (mode == 0)
+                color = texture2D(tex, vUv).rgb;
+            else
+                color = front;
         }
         else{
             color = back;
@@ -64,16 +104,19 @@
 
 <script>
 
-var camera, scene, renderer, control;
+var camera, scene, renderer, control, axis, controls;
+var theCanvas, theCanvasFrame;
 var keyboard = new KeyboardState();
 var eyePosition = new Vector();
 var objects = [];
 var cnt = 0;
-var mouseDown = false;
+var mouse = null;  //0 = left, 2 = right
+var picked = new Vector();
 var str = "";
+var axisTurn = false;
 
 //face texture
-var texture, fc, bc;
+var texture = [], fc, bc, chooseTex, useColor = 0;
 
 var Origami = new Origami();
 var State = new State();
@@ -88,11 +131,17 @@ init();
 animate();
 
 function init() {
-	renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    theCanvas = document.getElementById("cnvs");
+    theCanvasFrame = document.getElementById("cnvsFrame");
+
+	renderer = new THREE.WebGLRenderer({canvas: theCanvas, antialias: true});
+    //renderer.setSize(window.innerWidth, window.innerHeight);
+    var ww = theCanvasFrame.clientWidth;
+    var hh = theCanvasFrame.clientHeight;
+    renderer.setSize(ww, hh);
 	renderer.setClearColor (0x888888);
 
-    document.body.appendChild(renderer.domElement);
+    //document.body.appendChild(renderer.domElement);
 	
     scene = new THREE.Scene();
 
@@ -107,22 +156,84 @@ function init() {
     //control
     control = new THREE.OrbitControls(camera, renderer.domElement);
 
+    //axis
+    axis = new THREE.AxisHelper (20);
+
     //face texture
     fc = new THREE.Color(0xff0000);
     bc = new THREE.Color(0xffffff);
 
     THREE.ImageUtils.crossOrigin = '';
-    texture = THREE.ImageUtils.loadTexture('image/tex1.png');
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    texture[0] = THREE.ImageUtils.loadTexture('image/tex1.png');
+    texture[0].wrapS = THREE.RepeatWrapping;
+    texture[0].wrapT = THREE.RepeatWrapping;
+
+    texture[1] = THREE.ImageUtils.loadTexture('image/tex2.png');
+    texture[1].wrapS = THREE.RepeatWrapping;
+    texture[1].wrapT = THREE.RepeatWrapping;
+
+    chooseTex = texture[0];
+
+    //dat.GUI
+    var gui = new dat.GUI();
+
+    controls = new function () {
+        this.Flower = function(){
+            chooseTex = texture[0];
+            useColor = 0;
+            resetScene();
+            display();
+        };
+        this.Line = function(){
+            chooseTex = texture[1];
+            useColor = 0;
+            resetScene();
+            display();
+        };
+        this.Color = "#0055aa";
+        this.Change = function(){
+            fc.setStyle(this.Color);
+            useColor = 1;
+            resetScene();
+            display();
+        }
+        this.Boat = function(){
+            exBoat();
+        }
+        this.BirdHead = function(){
+            exBirdHead();
+        }
+        this.Plane = function(){
+            exPlane();
+        }
+    }
+
+    var f1 = gui.addFolder('Textures');
+    f1.add(controls, 'Flower');
+    f1.add(controls, 'Line');
+    f1.open();
+
+    var f2 = gui.addFolder('Color');
+    f2.addColor(controls, 'Color');
+    f2.add(controls, 'Change');
+    f2.open();
+
+    var f3 = gui.addFolder('Example');
+    f3.add(controls, 'Boat');
+    f3.add(controls, 'BirdHead');
+    f3.add(controls, 'Plane');
+    f3.open();
 	
 	Origami.setOriginal();
     display();
+
+    onWindowResize();
     
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);
     document.addEventListener('mouseup', onDocumentMouseUp, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
+    openselect.addEventListener("change", loadTXT, false);
 }
 
 function display(){
@@ -152,19 +263,46 @@ function lightVertex(pos)
     //console.log ('light');
 }
 
-function onMouseDown(event){
-    if (State.inAnimation || State.inRotation)
-        return;
-    if (event.button == 2){
-        resetScene();
-        display();
-        return;
-    }
+function lightLine(p1, p2){
+    var material = new THREE.LineBasicMaterial({color: 0xffff00});
+    var geometry = new THREE.Geometry();
 
+    var p = new THREE.Vector3();
+    p.set(p1.x, p1.y, p1.z);
+    geometry.vertices.push(p);
+    p.set(p2.x, p2.y, p2.z);
+    geometry.vertices.push(p);
+
+    var line = new THREE.Line(geometry, material);
+    scene.add (line);
+    objects.push(line);
+}
+
+function onDocumentMouseDown(event)
+{
+    if (event.button == 2)
+        mouse = 2;
+    else if (event.button == 0)
+        mouse = 0;
+    else
+        mouse = null;
+}
+
+function onDocumentMouseUp(event){
+    mouse = null;
+
+    Origami.releaseVertex();
+    State.inFolding = false;
+
+    resetScene();
+    display();
+}
+
+function onDocumentMouseMove(event){
     var vector = new THREE.Vector3();
     vector.set(
-        ( event.clientX / window.innerWidth ) * 2 - 1,
-        - ( event.clientY / window.innerHeight ) * 2 + 1,
+        ( event.clientX / theCanvasFrame.clientWidth ) * 2 - 1 - 0.013,
+        - ( event.clientY / theCanvasFrame.clientHeight ) * 2 + 1 + 0.013,
         0.5 );
     vector.unproject( camera );
     var dir = vector.sub( camera.position ).normalize();
@@ -181,42 +319,38 @@ function onMouseDown(event){
 
     var p = new Vector(pos.x, pos.y, pos.z);
     var v = new Vector(Cursor3D.x, Cursor3D.y, Cursor3D.z);
-    var picked = new Vector();
     picked.set2(Origami.pickVertex(v));
     //console.log (picked);
 
+    document.body.style.cursor = 'auto';
     if (picked.distance(p) <= 0.5){
-        State.inFolding = true;
-        resetScene();
-        display();
+        document.body.style.cursor = 'pointer';
+    }
+
+    switch(mouse){
+        case 0:
+            if (State.inAnimation || State.inRotation)
+                return;
+            if (picked.distance(p) <= 0.5){
+                State.inFolding = true;
+                resetScene();
+                display();
+            }
+            break;
+        case 2:
+            resetScene();
+            display();
+            break;
     }
 }
 
-function onDocumentMouseDown(event)
-{
-    mouseDown = true;
-    onMouseDown(event);
-}
-
-function onDocumentMouseUp(event){
-    mouseDown = false;
-
-    Origami.releaseVertex();
-    State.inFolding = false;
-
-    resetScene();
-    display();
-}
-
-function onDocumentMouseMove(event){
-    if (mouseDown)
-        onMouseDown(event);
-}
-
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    /*camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight);*/
+    camera.aspect = theCanvasFrame.clientWidth / theCanvasFrame.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(theCanvasFrame.clientWidth, theCanvasFrame.clientHeight);
 }
 
 function animate() {
@@ -227,32 +361,12 @@ function animate() {
 }
 
 function keyBoard(){
-    if (keyboard.down('Z')){
-        Origami.reset();
-        resetScene();
-        display();
-    }
-    if (keyboard.down('I')){
-        Origami.reset2(0);
-        resetScene();
-        display();
-    }
-    if (keyboard.down('A')){
-        if (!State.inFolding && !State.inAnimation){
-            clearlog();
-            Origami.save();
-            Origami.reset2(0);
-            Origami.animation.position = -1.0;
-            State.inAnimation = true;
-            Origami.animation.step = 0;
-        }
-        else {
-            Origami.load();
-            State.inAnimation = false;
-        }
-        resetScene();
-        display();
-    }
+    if (keyboard.down('Z'))
+        undoFold();
+    if (keyboard.down('I'))
+        initFold();
+    if (keyboard.down('A'))
+        animateFold();
     if (keyboard.down('M')){
         KState.M = true;
         resetScene();
@@ -283,10 +397,10 @@ function keyBoard(){
         resetScene();
         display();
     }
-    if (keyboard.down('S')){
-        Origami.save();
-        saveTXT();
-    }
+    if (keyboard.down('S'))
+        saveFold();
+    if (keyboard.down('X'))
+        axisOnOff();
 }
 
 function update() 

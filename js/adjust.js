@@ -91,6 +91,8 @@ Adjust.prototype.adjustEdge = function (stage){
 	while (pickedFaceList[f] != null){
 		var pickedEdge = [], closestEdge = [];
 		var distance = [];
+		distance[0] = new DV();
+		distance[1] = new DV();
 		var rotatedPosition = [], a = [], b = [];
 		rotatedPosition[0] = a;
 		rotatedPosition[1] = b;
@@ -101,10 +103,10 @@ Adjust.prototype.adjustEdge = function (stage){
 				rotatedPosition[e][v] = stage.fold.rotateVertexPosition (pickedEdge[e].vertex[v].position);
 			closestEdge[e] = pickedFaceGroup.closestEdge (distance[e], rotatedPosition[e][0], rotatedPosition[e][1]);
 		}
-		if (distance[0] < this.margin || distance[1] < this.margin){
+		if (distance[0].distance < this.margin || distance[1].distance < this.margin){
 			this.type = AdjustEdge;
 			var line = [];
-			var e2 = distance[0] < distance[1] ? 0 : 1;
+			var e2 = distance[0].distance < distance[1].distance ? 0 : 1;
 			line[0] = new Line();
 			line[0].set (pickedEdge[e2].vertex[0].position, pickedEdge[e2].vertex[1].position);
 			line[1] = new Line();
@@ -148,6 +150,7 @@ Adjust.prototype.draw = function (){  //double
 	switch (this.type){
 		case AdjustVertex:
 			lightVertex(this.markVertex[0].position);
+			//console.log ('vertex');
 			break;
 		case AdjustEdge:
 			if (this.markEdge.label == DividedEdge){
@@ -164,10 +167,12 @@ Adjust.prototype.draw = function (){  //double
 			}
 			lightVertex(this.markVertex[0].position);
 			lightVertex(this.markVertex[1].position);
+			//console.log ('edge');
 			break;
 		case DiagonalFold:
 			lightVertex(this.markVertex[0].position);
 			lightVertex(this.markVertex[1].position);
+			//console.log ('diagonal');
 			break;
 	}
 }

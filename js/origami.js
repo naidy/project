@@ -79,6 +79,7 @@ Origami.prototype.drawAdjust = function(){
 }
 
 Origami.prototype.save = function(){
+	str = "";
 	var i;
 	for (i = 0; i < this.maxStage; i++)
 		this.stage[i].saveFold(i);
@@ -91,6 +92,18 @@ Origami.prototype.load = function(){
 		this.stage[this.maxStage+1] = new Stage();
 		this.stage[this.maxStage+1].newStage(this.stage[this.maxStage]);
 		this.maxStage++;
+	}
+}
+
+Origami.prototype.load2 = function(data){  //string
+	this.reset2(0);
+	var pt = 0;
+	while (this.stage[this.maxStage].loadFold2(this.maxStage, data, pt)){
+		this.stage[this.maxStage].renew();
+		this.stage[this.maxStage+1] = new Stage();
+		this.stage[this.maxStage+1].newStage(this.stage[this.maxStage]);
+		this.maxStage++;
+		pt += 7;
 	}
 }
 

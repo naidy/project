@@ -116,3 +116,7 @@ Stage.prototype.saveFold = function (ID){  //int
 Stage.prototype.loadFold = function (ID){  //int
 	return this.fold.load(ID, this.faceGroup);
 }
+
+Stage.prototype.loadFold2 = function (ID, data, pt){  //int string pointer
+	return this.fold.load2(ID, this.faceGroup, data, pt);
+}

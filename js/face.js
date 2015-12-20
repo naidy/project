@@ -129,15 +129,15 @@ Face.prototype.closestVertex3 = function (line, dv, except, apartMargin){  //lin
 	}
 }
 
-Face.prototype.closestEdge = function (distance, p0, p1){  //double vector vector
+Face.prototype.closestEdge = function (dv, p0, p1){  //dv vector vector
 	var closest = null;  //edge
-	distance = DBL_MAX;  //DBL_MAX
+	dv.distance = DBL_MAX;  //DBL_MAX
 	var i;
 	for (i = 0; i < this.vertexSize; i++){
 		var d = this.edge[i].distance(p0, p1);
-		if (d < distance){
+		if (d < dv.distance){
 			closest = this.edge[i];
-			distance = d;
+			dv.distance = d;
 		}
 	}
 	return closest;
@@ -430,7 +430,11 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
             },
             tex: {
                 type: 't',
-                value: texture
+                value: chooseTex
+            },
+            mode: {
+            	type: 'i',
+            	value: useColor
             }
         },
         vertexShader: document.getElementById('myVertexShader').textContent,

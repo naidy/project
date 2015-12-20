@@ -74,16 +74,19 @@ FaceGroup.prototype.pickedFaceList = function (pickedVertex){  //vertex
 	return faceList;
 }
 
-FaceGroup.prototype.closestEdge = function (distance, p0, p1){  //double vector vector
+FaceGroup.prototype.closestEdge = function (dv, p0, p1){  //dv vector vector
+	/*var closest = null;
+	distance = DBL_MAX;*/
 	var closest = null;
-	distance = DBL_MAX;
+	dv.distance = DBL_MAX;
+	var dv2 = new DV();
 	var i;
 	for (i = 0; i < this.faceSize; i++){
-		var d;
-		var e = this.face[i].closestEdge (d, p0, p1);
-		if (d < distance){
+		dv2.reset();
+		var e = this.face[i].closestEdge (dv2, p0, p1);
+		if (dv2.distance < dv.distance){
 			closest = e;
-			distance = d;
+			dv.distance = dv2.distance;
 		}
 	}
 	return closest;

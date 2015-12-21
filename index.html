@@ -17,6 +17,10 @@
         margin: 30px;
         font-size: large;
     }
+    #my-gui{
+        float: right;
+        margin: 50px;
+    }
     .buttonClass {
         float: left;
         width: 10%;
@@ -50,6 +54,8 @@
 <input type="file" id="openselect" style="margin: 30px"/>
 
 <div id="introduction">Mouse: LEFT click to fold, RIGHT click to control the camera<br/>Keyboard: [M,N] to control the folding angle, press [T] to do TuckIn</div>
+
+<div id="my-gui"></div>
 
 <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
 <script src="js/OrbitControls.js"></script>
@@ -114,6 +120,7 @@ var mouse = null;  //0 = left, 2 = right
 var picked = new Vector();
 var str = "";
 var axisTurn = false;
+var customContainer = document.getElementById('my-gui');
 
 //face texture
 var texture = [], fc, bc, chooseTex, useColor = 0;
@@ -146,7 +153,7 @@ function init() {
     scene = new THREE.Scene();
 
 	//camera
-    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+    camera = new THREE.PerspectiveCamera(50, theCanvasFrame.clientWidth / theCanvasFrame.clientHeight, 1, 10000);
     camera.position.z = 50;
     camera.lookAt (new THREE.Vector3 (0,0,0));
     scene.add(camera);
@@ -172,62 +179,69 @@ function init() {
     texture[1].wrapS = THREE.RepeatWrapping;
     texture[1].wrapT = THREE.RepeatWrapping;
 
+    texture[2] = THREE.ImageUtils.loadTexture('image/tex3.png');
+    texture[2].wrapS = THREE.RepeatWrapping;
+    texture[2].wrapT = THREE.RepeatWrapping;
+
+    texture[3] = THREE.ImageUtils.loadTexture('image/tex4.png');
+    texture[3].wrapS = THREE.RepeatWrapping;
+    texture[3].wrapT = THREE.RepeatWrapping;
+
+    texture[4] = THREE.ImageUtils.loadTexture('image/tex5.png');
+    texture[4].wrapS = THREE.RepeatWrapping;
+    texture[4].wrapT = THREE.RepeatWrapping;
+
+    texture[5] = THREE.ImageUtils.loadTexture('image/tex6.png');
+    texture[5].wrapS = THREE.RepeatWrapping;
+    texture[5].wrapT = THREE.RepeatWrapping;
+
     chooseTex = texture[0];
 
     //dat.GUI
-    var gui = new dat.GUI();
+    var gui = new dat.GUI({ autoPlace: false });
 
     controls = new function () {
-        this.Flower = function(){
-            chooseTex = texture[0];
+        this.Tex = 0;
+        this.ChangeTex = function(){
+            chooseTex = texture[this.Tex];
             useColor = 0;
             resetScene();
             display();
-        };
-        this.Line = function(){
-            chooseTex = texture[1];
-            useColor = 0;
-            resetScene();
-            display();
-        };
+        }
         this.Color = "#0055aa";
-        this.Change = function(){
+        this.ChangeColor = function(){
             fc.setStyle(this.Color);
             useColor = 1;
             resetScene();
             display();
         }
-        this.Boat = function(){
-            exBoat();
-        }
-        this.BirdHead = function(){
-            exBirdHead();
-        }
-        this.Plane = function(){
-            exPlane();
+        this.Style = -1;
+        this.Demo = function(){
+            demo(this.Style);
         }
     }
 
     var f1 = gui.addFolder('Textures');
-    f1.add(controls, 'Flower');
-    f1.add(controls, 'Line');
+    f1.add(controls, 'Tex', {Flower: 0, Grid: 1, Grid2: 2, Diamond: 3, Rose: 4, Flower2: 5}).name('Texture');
+    f1.add(controls, 'ChangeTex').name('Change');
     f1.open();
 
     var f2 = gui.addFolder('Color');
     f2.addColor(controls, 'Color');
-    f2.add(controls, 'Change');
+    f2.add(controls, 'ChangeColor').name('Change');
     f2.open();
 
     var f3 = gui.addFolder('Example');
-    f3.add(controls, 'Boat');
-    f3.add(controls, 'BirdHead');
-    f3.add(controls, 'Plane');
+    f3.add(controls, 'Style', {None: -1, BirdHead: 0, Plane: 1, Boat: 2, HighHeeleShoes: 3, Goose: 4, IceCream: 5, Pen: 6});
+    f3.add(controls, 'Demo');
     f3.open();
-	
-	Origami.setOriginal();
-    display();
 
-    onWindowResize();
+    customContainer.appendChild(gui.domElement);
+	
+	mainPaper = new THREE.Object3D();
+
+    Origami.setOriginal();
+    display();
     
     window.addEventListener('resize', onWindowResize, false);
     document.addEventListener('mousedown', onDocumentMouseDown, false);

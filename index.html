@@ -75,6 +75,7 @@
 <script src="js/dat.gui.min.js"></script>
 <script src="js/localStorage.js"></script>
 <script src="js/function.js"></script>
+<script src="js/Stats.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
 
 <script id="myVertexShader" type="x-shader/x-vertex">
@@ -95,7 +96,7 @@
     void main() {
         vec3 color;
 
-        if (n > 0.0){
+        if (n <= 0.0){
             if (mode == 0)
                 color = texture2D(tex, vUv).rgb;
             else
@@ -110,7 +111,7 @@
 
 <script>
 
-var camera, scene, renderer, control, axis, controls;
+var camera, scene, renderer, control, axis, controls, stats;
 var theCanvas, theCanvasFrame;
 var keyboard = new KeyboardState();
 var eyePosition = new Vector();
@@ -202,43 +203,44 @@ function init() {
 
     controls = new function () {
         this.Tex = 0;
-        this.ChangeTex = function(){
-            chooseTex = texture[this.Tex];
-            useColor = 0;
-            resetScene();
-            display();
-        }
-        this.Color = "#0055aa";
+        this.Color = "#ff0000";
         this.ChangeColor = function(){
             fc.setStyle(this.Color);
-            useColor = 1;
-            resetScene();
-            display();
         }
+        this.Use = 0;
         this.Style = -1;
-        this.Demo = function(){
+        this.Show = function(){
             demo(this.Style);
         }
     }
 
-    var f1 = gui.addFolder('Textures');
-    f1.add(controls, 'Tex', {Flower: 0, Grid: 1, Grid2: 2, Diamond: 3, Rose: 4, Flower2: 5}).name('Texture');
-    f1.add(controls, 'ChangeTex').name('Change');
+    var f1 = gui.addFolder('Material');
+    f1.add(controls, 'Tex', {Flower: 0, Grid: 1, Grid2: 2, Diamond: 3, Rose: 4, Flower2: 5}).name('Texture').onFinishChange(function(value) {
+        this.Tex = value;
+        chooseTex = texture[this.Tex];
+    });
+    f1.addColor(controls, 'Color');
+    f1.add(controls, 'ChangeColor').name('Change Color');
+    f1.add(controls, 'Use', {Texture: 0, Color: 1}).onFinishChange(function(value){
+        useColor = value;
+        resetScene();
+        display();
+    });
     f1.open();
 
-    var f2 = gui.addFolder('Color');
-    f2.addColor(controls, 'Color');
-    f2.add(controls, 'ChangeColor').name('Change');
-    f2.open();
-
-    var f3 = gui.addFolder('Example');
-    f3.add(controls, 'Style', {None: -1, BirdHead: 0, Plane: 1, Boat: 2, HighHeeleShoes: 3, Goose: 4, IceCream: 5, Pen: 6});
-    f3.add(controls, 'Demo');
+    var f3 = gui.addFolder('Demo');
+    f3.add(controls, 'Style', {None: -1, BirdHead: 0, Plane: 1, Boat: 2, HighHeeleShoes: 3, Goose: 4, IceCream: 5, Pen: 6, Plane2: 7}).name('Examples');
+    f3.add(controls, 'Show');
     f3.open();
 
     customContainer.appendChild(gui.domElement);
 	
-	mainPaper = new THREE.Object3D();
+    //stats
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    stats.domElement.style.zIndex = 100;
+    document.body.appendChild( stats.domElement );
 
     Origami.setOriginal();
     display();
@@ -423,11 +425,14 @@ function update()
 {
     control.update();
     keyboard.update();
+    stats.update();
 
     keyBoard();
     eyePosition.set (camera.position.x, camera.position.y, camera.position.z);
     
     timer();
+
+
 
     /*
     cnt = 0;

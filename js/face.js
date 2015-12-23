@@ -383,6 +383,7 @@ Face.prototype.whichSide = function (plane, margin){  //plane double
 
 Face.prototype.draw = function (faceNormal, z){  //vector double
 	var which = faceNormal.dot(this.normal());
+	//console.log (which);
 	/*var shape = new THREE.Shape();
     var i;
     for (i = 0; i < this.vertexSize; i++){

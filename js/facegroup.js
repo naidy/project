@@ -430,15 +430,15 @@ FaceGroup.prototype.draw = function (eyePosition){  //vector
 	tmp.sub2 (this.face[0].vertex(0).position, eyePosition);
 	if (tmp.dot (this.normal) < 0.0){
 		for (i = 0; i < this.faceSize; i++){
-			this.face[i].draw (this.normal, z);
+			this.face[i].draw (tmp, z);
 			z += 0.01;
 		}
 	}else{
-		var frontNormal = new Vector();
+		/*var frontNormal = new Vector();
 		frontNormal.set2(this.normal);
-		frontNormal.reverse();
+		frontNormal.reverse();*/
 		for (i = this.faceSize - 1; i >= 0; i--){
-			this.face[i].draw (frontNormal, z);
+			this.face[i].draw (tmp, z);
 			z -= 0.01;
 		}
 	}

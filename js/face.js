@@ -381,8 +381,8 @@ Face.prototype.whichSide = function (plane, margin){  //plane double
 		return Across;
 }
 
-Face.prototype.draw = function (faceNormal, z){  //vector double
-	var which = faceNormal.dot(this.normal());
+Face.prototype.draw = function (faceNormal, z, faceGroupNormal){  //vector double, vector
+	which = faceNormal.dot(this.normal());
 	//console.log (which);
 	/*var shape = new THREE.Shape();
     var i;
@@ -434,8 +434,8 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
                 value: chooseTex
             },
             mode: {
-            	type: 'i',
-            	value: useColor
+                type: 'i',
+                value: useColor
             }
         },
         vertexShader: document.getElementById('myVertexShader').textContent,
@@ -443,7 +443,9 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
     });
     
     var paper = new THREE.Mesh (paperGeo, shaderMaterial);
-    paper.position.z += z;
+    paper.position.x += z*faceGroupNormal.x;
+    paper.position.y += z*faceGroupNormal.y;
+    paper.position.z += z*faceGroupNormal.z;
     scene.add (paper);
     objects.push(paper);
 
@@ -451,11 +453,17 @@ Face.prototype.draw = function (faceNormal, z){  //vector double
 	var geometry = new THREE.Geometry();
 	for (i = 0; i < this.vertexSize; i++){
 		var p = new THREE.Vector3();
-		p.set (this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z + z);
+		p.set (this.vertex(i).position.x, this.vertex(i).position.y, this.vertex(i).position.z);
+		p.x += z*faceGroupNormal.x;
+    	p.y += z*faceGroupNormal.y;
+    	p.z += z*faceGroupNormal.z;
 		geometry.vertices.push(p);
 	}
 	var p = new THREE.Vector3();
-	p.set(this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z + z);
+	p.set(this.vertex(0).position.x, this.vertex(0).position.y, this.vertex(0).position.z);
+	p.x += z*faceGroupNormal.x;
+	p.y += z*faceGroupNormal.y;
+	p.z += z*faceGroupNormal.z;
 	geometry.vertices.push(p);
 
 	var line = new THREE.Line(geometry, material);

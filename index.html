@@ -212,6 +212,7 @@ function init() {
         this.Show = function(){
             demo(this.Style);
         }
+        this.Speed = 5;
     }
 
     var f1 = gui.addFolder('Material');
@@ -232,6 +233,10 @@ function init() {
     f3.add(controls, 'Style', {None: -1, BirdHead: 0, Plane: 1, Boat: 2, HighHeeleShoes: 3, Goose: 4, IceCream: 5, Pen: 6, Plane2: 7}).name('Examples');
     f3.add(controls, 'Show');
     f3.open();
+
+    var f4 = gui.addFolder('Animation');
+    f4.add(controls, 'Speed', 1, 5).step(1);
+    f4.open();
 
     customContainer.appendChild(gui.domElement);
 	
@@ -432,7 +437,7 @@ function update()
     
     timer();
 
-
+    State.fps = 300 / controls.Speed;
 
     /*
     cnt = 0;

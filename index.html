@@ -473,6 +473,7 @@ function timer(){
         destination.set (Cursor3D.x, Cursor3D.y, Cursor3D.z);
         //console.log (destination);
         Origami.moveVertex (destination, eyePosition, State.inBending);
+        //console.log(Origami.stage[Origami.maxStage].faceGroupSize);
     }
     else if (State.inAnimation){
         if (Origami.play(State.fps))
